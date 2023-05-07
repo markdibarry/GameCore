@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://dl8lwy1ltyp17"]
+
+[ext_resource type="Script" path="res://GameCore/GUI/Menus/OptionItems/NoDisplayOption.cs" id="1_l6aup"]
+
+[node name="NoDisplayOption" type="MarginContainer"]
+modulate = Color(0.7, 0.7, 0.7, 1)
+script = ExtResource("1_l6aup")
+DimWhenUnfocused = true

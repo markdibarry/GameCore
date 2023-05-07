@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://bfvhmyvrrotqt"]
+
+[ext_resource type="Texture2D" uid="uid://dw70nnenqwtqk" path="res://GameCore/GUI/Cursors/HandCursor.png" id="1_unxy8"]
+[ext_resource type="Script" path="res://GameCore/GUI/Cursors/HandCursor.cs" id="2_34iwk"]
+
+[node name="HandCursor" type="Sprite2D"]
+position = Vector2(-1, 0)
+texture = ExtResource("1_unxy8")
+script = ExtResource("2_34iwk")

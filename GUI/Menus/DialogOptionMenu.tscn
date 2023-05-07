@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="PackedScene" uid="uid://qbivbh8nuiuw" path="res://GameCore/GUI/Menus/Menu.tscn" id="1_yuc3r"]
+[ext_resource type="Script" path="res://GameCore/GUI/Menus/DialogOptionMenu.cs" id="2_5t1an"]
+[ext_resource type="PackedScene" path="res://GameCore/GUI/Menus/SubMenus/DialogOptionSubMenu.tscn" id="3_fj61v"]
+
+[node name="DialogOptionMenu" instance=ExtResource("1_yuc3r")]
+visible = true
+script = ExtResource("2_5t1an")
+
+[node name="Background" parent="ContentGroup/Content" index="0"]
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SubMenus" parent="ContentGroup/Content" index="1"]
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="DialogOptionSubMenu" parent="ContentGroup/Content/SubMenus" index="0" instance=ExtResource("3_fj61v")]
+layout_mode = 1
+grow_horizontal = 2
+grow_vertical = 2

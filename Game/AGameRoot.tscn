@@ -1,0 +1,36 @@
+[gd_scene load_steps=4 format=3 uid="uid://dfoicm8bddlks"]
+
+[ext_resource type="PackedScene" uid="uid://f1ad6egrl20n" path="res://GameCore/GUI/Transitions/TransitionLayer.tscn" id="3_7ben1"]
+[ext_resource type="Script" path="res://GameCore/Audio/AudioControllerNull.cs" id="4_j4llg"]
+[ext_resource type="Script" path="res://GameCore/GUI/GUIController.cs" id="5_ft6f4"]
+
+[node name="GameRootBase" type="Node"]
+process_mode = 3
+
+[node name="MainBackground" type="CanvasLayer" parent="."]
+layer = -100
+
+[node name="ColorRect" type="ColorRect" parent="MainBackground"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 1)
+
+[node name="GameDisplay" type="Node2D" parent="."]
+
+[node name="AudioController" type="Node2D" parent="GameDisplay"]
+script = ExtResource("4_j4llg")
+
+[node name="Music" type="Node2D" parent="GameDisplay/AudioController"]
+
+[node name="SceneFX" type="Node2D" parent="GameDisplay/AudioController"]
+
+[node name="MenuFX" type="Node2D" parent="GameDisplay/AudioController"]
+
+[node name="GameSessionContainer" type="Node2D" parent="GameDisplay"]
+
+[node name="GUIController" type="CanvasLayer" parent="GameDisplay"]
+layer = 60
+script = ExtResource("5_ft6f4")
+
+[node name="Transition" parent="GameDisplay" instance=ExtResource("3_7ben1")]

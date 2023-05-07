@@ -1,0 +1,111 @@
+[gd_scene load_steps=5 format=3 uid="uid://cynhh6ygxq8bl"]
+
+[ext_resource type="Script" path="res://GameCore/GUI/Menus/Containers/WindowContainer.cs" id="1_shbpn"]
+[ext_resource type="Script" path="res://GameCore/GUI/Menus/Containers/ClipContainer.cs" id="2_5h14c"]
+[ext_resource type="Texture2D" uid="uid://bwi15twbwdses" path="res://GameCore/GUI/Cursors/arrowDownSmall.png" id="2_xe8jn"]
+[ext_resource type="Texture2D" uid="uid://dvtn3l1ldd2k5" path="res://GameCore/GUI/Cursors/arrowLeftSmall.png" id="3_uv46c"]
+
+[node name="WindowContainer" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+script = ExtResource("1_shbpn")
+ScrollBarEnabled = true
+
+[node name="ClipContainer" type="Container" parent="."]
+clip_contents = true
+layout_mode = 2
+script = ExtResource("2_5h14c")
+
+[node name="Arrows" type="MarginContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = -5
+theme_override_constants/margin_top = -5
+theme_override_constants/margin_right = -5
+theme_override_constants/margin_bottom = -5
+
+[node name="ArrowUp" type="TextureRect" parent="Arrows"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+mouse_filter = 2
+texture = ExtResource("2_xe8jn")
+stretch_mode = 2
+flip_v = true
+
+[node name="ArrowLeft" type="TextureRect" parent="Arrows"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_uv46c")
+stretch_mode = 2
+
+[node name="ArrowDown" type="TextureRect" parent="Arrows"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 8
+mouse_filter = 2
+texture = ExtResource("2_xe8jn")
+stretch_mode = 2
+
+[node name="ArrowRight" type="TextureRect" parent="Arrows"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_uv46c")
+stretch_mode = 2
+flip_h = true
+
+[node name="ScrollBars" type="Control" parent="."]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="HScrollBar" type="HScrollBar" parent="ScrollBars"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -5.0
+offset_top = 5.0
+offset_bottom = 5.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_vertical = 8
+mouse_force_pass_scroll_events = false
+page = 65.2
+
+[node name="VScrollBar" type="VScrollBar" parent="ScrollBars"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = -5.0
+offset_right = 5.0
+grow_horizontal = 0
+grow_vertical = 2
+size_flags_horizontal = 8
+mouse_force_pass_scroll_events = false
+page = 91.6667

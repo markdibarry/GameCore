@@ -1,0 +1,62 @@
+[gd_scene format=3 uid="uid://3gdh7qgiaj5h"]
+
+[node name="StateDisplay" type="Control"]
+offset_right = 32.0
+offset_bottom = 23.0
+
+[node name="MoveState" type="Label" parent="."]
+texture_filter = 1
+offset_left = -6.0
+offset_top = -11.0
+offset_right = 6.0
+grow_horizontal = 2
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/line_spacing = 0
+theme_override_font_sizes/font_size = 16
+text = "123"
+
+[node name="AirState" type="Label" parent="."]
+texture_filter = 1
+offset_left = -6.0
+offset_top = -22.0
+offset_right = 6.0
+offset_bottom = -11.0
+grow_horizontal = 2
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/line_spacing = 0
+theme_override_font_sizes/font_size = 16
+text = "123"
+
+[node name="ActionState" type="Label" parent="."]
+texture_filter = 1
+offset_left = -6.0
+offset_right = 6.0
+offset_bottom = 11.0
+grow_horizontal = 2
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/line_spacing = 0
+theme_override_font_sizes/font_size = 16
+text = "123"
+
+[node name="HealthState" type="Label" parent="."]
+texture_filter = 1
+offset_left = -6.0
+offset_top = -33.0
+offset_right = 6.0
+offset_bottom = -22.0
+size_flags_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/line_spacing = 0
+theme_override_font_sizes/font_size = 16
+text = "123"

@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://mi7324x2qgyp"]
+
+[node name="AreaScene" type="Node2D"]
+
+[node name="Scenery" type="Node2D" parent="."]
+
+[node name="CameraLimits" type="Node2D" parent="."]
+
+[node name="SpawnPoints" type="Node2D" parent="."]
+
+[node name="Events" type="Node2D" parent="."]
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="Players" type="Node2D" parent="."]
+
+[node name="Effects" type="Node2D" parent="."]

@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://p0afcetfn4ef"]
+
+[ext_resource type="Script" path="res://GameCore/GUI/Menus/Containers/DynamicTextContainer.cs" id="1_y41p2"]
+[ext_resource type="PackedScene" uid="uid://csbncf5x8i8pd" path="res://GameCore/GUI/Text/DynamicTextBox.tscn" id="2_alwg4"]
+
+[node name="DynamicTextContainer" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_y41p2")
+
+[node name="DynamicTextBox" parent="." instance=ExtResource("2_alwg4")]
+layout_mode = 2
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 473.0
+offset_bottom = 263.0
+mouse_filter = 2

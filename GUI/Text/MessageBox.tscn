@@ -1,0 +1,62 @@
+[gd_scene load_steps=5 format=3 uid="uid://ciheicdycy60"]
+
+[ext_resource type="Script" path="res://GameCore/GUI/Text/MessageBox.cs" id="1"]
+[ext_resource type="StyleBox" path="res://Arenbee/GUI/Backgrounds/transparent.tres" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_av8k5"]
+bg_color = Color(0, 0, 0, 0.45098)
+
+[sub_resource type="StyleBoxFlat" id="1"]
+bg_color = Color(0, 0, 0, 1)
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.760784, 0.745098, 0.756863, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+anti_aliasing = false
+
+[node name="MessageBox" type="MarginContainer"]
+texture_filter = 1
+offset_right = 126.0
+offset_bottom = 17.0
+script = ExtResource("1")
+
+[node name="BackgroundMargin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 1
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_right = 1
+theme_override_constants/margin_bottom = 1
+
+[node name="BackgroundColor" type="Panel" parent="BackgroundMargin"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_av8k5")
+
+[node name="BackgroundPattern" type="Panel" parent="BackgroundMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = ExtResource("2")
+
+[node name="Border" type="Panel" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("1")
+
+[node name="MessageMargin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="Message" type="Label" parent="MessageMargin"]
+texture_filter = 1
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_constants/line_spacing = 0

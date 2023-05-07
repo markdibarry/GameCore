@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://woe07gniexc"]
+
+[ext_resource type="PackedScene" uid="uid://bhls5d625fphp" path="res://GameCore/GUI/Menus/SubMenus/SubMenu.tscn" id="1_22hay"]
+
+[node name="OptionSubMenu" instance=ExtResource("1_22hay")]
+script = null
+
+[node name="Cursors" type="Control" parent="Foreground" index="0"]
+layout_mode = 2

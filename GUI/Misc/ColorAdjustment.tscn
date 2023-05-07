@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://blqjjq13kqy8j"]
+
+[ext_resource type="Shader" path="res://GameCore/Shaders/ColorAdjustment.gdshader" id="1_b70dx"]
+[ext_resource type="Script" path="res://GameCore/GUI/Misc/ColorAdjustment.cs" id="1_l5xii"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_u7eke"]
+resource_local_to_scene = true
+shader = ExtResource("1_b70dx")
+shader_parameter/_brightness = 0.0
+shader_parameter/_contrast = 0.0
+shader_parameter/_saturation = 0.0
+shader_parameter/_tint_color = Color(1, 1, 1, 1)
+shader_parameter/_tint_amount = 0.0
+
+[node name="ColorAdjustment" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_l5xii")
+TintColor = Color(1, 1, 1, 1)
+
+[node name="ColorRect" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_u7eke")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0

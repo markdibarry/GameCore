@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "type": "object",
+  "required": [ "parts" ],
+  "additionalProperties": false,
+  "properties": {
+    "parts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [ "id", "lines" ],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "lines": {
+            "type": "array",
+            "required": ["speakers", "text"],
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": { "type": "string" },
+                "next": { "type": "string" },
+                "speakers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [ "character" ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "character": { "type": "string" },
+                      "displayName": { "type": "string" },
+                      "mood": { "type": "string" }
+                    }
+                  }
+                },
+                "choices": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [ "text" ],
+                    "properties": {
+                      "text": { "type": "string" },
+                      "next": { "type": "string" },
+                      "conditions": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "category": { "type": "string" },
+                            "type": { "type": "string" },
+                            "target": { "type": "string" },
+                            "comparison": { "type": "string" },
+                            "toCompare": { "type": "string" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

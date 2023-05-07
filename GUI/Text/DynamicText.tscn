@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3 uid="uid://dy7nyxusfo7fe"]
+
+[ext_resource type="Script" path="res://GameCore/GUI/Text/DynamicText.cs" id="1_b2t8a"]
+
+[node name="DynamicText" type="RichTextLabel"]
+clip_contents = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+visible_characters = 0
+visible_characters_behavior = 1
+visible_ratio = 0.976744
+script = ExtResource("1_b2t8a")

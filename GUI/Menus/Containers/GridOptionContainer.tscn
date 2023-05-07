@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://bo1ntvx40yyl1"]
+
+[ext_resource type="Script" path="res://GameCore/GUI/Menus/Containers/GridOptionContainer.cs" id="1_r27nr"]
+
+[node name="GridOptionContainer" type="MarginContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+theme_type_variation = &"OptionContainer"
+script = ExtResource("1_r27nr")
+FocusWrap = true
+Columns = 1
+
+[node name="GridContainer" type="GridContainer" parent="."]
+layout_mode = 2
+theme_override_constants/h_separation = 3
+theme_override_constants/v_separation = 1

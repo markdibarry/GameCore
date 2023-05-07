@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://GameCore/GUI/Text/MessageBoxList.cs" id="2"]
+
+[node name="MessageList" type="VBoxContainer"]
+offset_right = 100.0
+offset_bottom = 47.0
+rect_clip_content = true
+size_flags_horizontal = 0
+theme_override_constants/separation = 2
+script = ExtResource( "2" )
+__meta__ = {
+"_edit_group_": true,
+"_edit_use_anchors_": false
+}

@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://GameCore/GUI/Text/MessageBox.tscn" id="1"]
+[ext_resource type="Script" path="res://GameCore/GUI/Text/TimedMessageBox.cs" id="2"]
+
+[node name="TimedMessageBox" instance=ExtResource( 1 )]
+script = ExtResource( 2 )
+
+[node name="Timer" type="Timer" parent="." index="3"]
+wait_time = 2.0
+one_shot = true
+autostart = true

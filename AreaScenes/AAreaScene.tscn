@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3 uid="uid://nbqjbe4vr5nk"]
+
+[ext_resource type="PackedScene" uid="uid://blqjjq13kqy8j" path="res://GameCore/GUI/Misc/ColorAdjustment.tscn" id="2_rv66l"]
+
+[node name="AreaScene" type="Node2D"]
+
+[node name="Scenery" type="Node2D" parent="."]
+
+[node name="CameraLimits" type="Node2D" parent="."]
+
+[node name="SpawnPoints" type="Node2D" parent="."]
+
+[node name="Events" type="Node2D" parent="."]
+
+[node name="Actors" type="CanvasLayer" parent="."]
+follow_viewport_enabled = true
+
+[node name="ColorAdjustment" parent="." instance=ExtResource("2_rv66l")]
+layer = 30
+
+[node name="ActionSequence" type="CanvasLayer" parent="."]
+layer = 35
+follow_viewport_enabled = true

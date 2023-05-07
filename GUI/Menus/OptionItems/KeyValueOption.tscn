@@ -1,0 +1,31 @@
+[gd_scene load_steps=2 format=3 uid="uid://vm13acghyp35"]
+
+[ext_resource type="Script" path="res://GameCore/GUI/Menus/OptionItems/KeyValueOption.cs" id="3_f7kpw"]
+
+[node name="KeyValueOption" type="MarginContainer"]
+modulate = Color(0.7, 0.7, 0.7, 1)
+offset_right = 10.0
+offset_bottom = 9.0
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 1
+theme_override_constants/margin_top = 1
+theme_override_constants/margin_right = 1
+theme_override_constants/margin_bottom = 1
+script = ExtResource("3_f7kpw")
+KeyText = "Orange"
+ValueText = "x5"
+DimWhenUnfocused = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Key" type="Label" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Orange"
+
+[node name="Value" type="Label" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "x5"
