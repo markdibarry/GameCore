@@ -3,9 +3,9 @@ using Godot;
 
 namespace GameCore.Audio;
 
-public abstract partial class AAudioController : Node2D
+public partial class BaseAudioController : Node2D
 {
-    public AAudioController()
+    public BaseAudioController()
     {
         _sceneFXPlayers = new AudioPlayer2D[MaxFXStreams];
         _menuFXPlayers = new AudioStreamPlayer[MaxFXStreams];

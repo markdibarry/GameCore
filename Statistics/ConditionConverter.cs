@@ -19,7 +19,7 @@ public class ConditionConverter : JsonConverter<Condition>
                 break;
             }
         }
-        Type conditionType = StatsLocator.ConditionLookup.GetConditionType(val);
+        Type conditionType = StatsLocator.ConditionTypeDB.GetConditionType(val);
         return JsonSerializer.Deserialize(ref reader, conditionType) as Condition;
     }
 

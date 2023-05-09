@@ -9,7 +9,7 @@ namespace GameCore.Actors;
 [Tool]
 public abstract partial class ASpawner : Node2D
 {
-    protected static AActorDataDB ActorDataDB { get; set; } = ActorsLocator.ActorDataDB;
+    protected static IActorDataDB ActorDataDB { get; set; } = ActorsLocator.ActorDataDB;
     private string _actorDataId = string.Empty;
     private bool _ready;
     public bool Respawn { get; set; }
@@ -71,7 +71,7 @@ public abstract partial class ASpawner : Node2D
                 { "type", (int)Variant.Type.String },
                 { "usage", (int)PropertyUsageFlags.Default },
                 { "hint", (int)PropertyHint.Enum },
-                { "hint_string", ActorsLocator.ActorDataDB.ActorData.Keys.ToArray().Join(",") }
+                { "hint_string", ActorDataDB.GetKeys().Join(",") }
             },
             new()
             {

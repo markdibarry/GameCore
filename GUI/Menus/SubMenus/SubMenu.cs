@@ -10,7 +10,7 @@ namespace GameCore.GUI;
 [Tool]
 public partial class SubMenu : Control
 {
-    protected static AAudioController Audio { get; } = Locator.Audio;
+    protected static BaseAudioController Audio { get; } = Locator.Audio;
     private bool _dim;
 
     [Export]

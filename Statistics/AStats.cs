@@ -42,7 +42,7 @@ public abstract class AStats
     public Dictionary<int, Stat> StatLookup { get; }
     public IDamageable StatsOwner { get; }
     protected List<IStatusEffect> StatusEffects { get; }
-    protected static AStatusEffectDB StatusEffectDB { get; } = StatsLocator.StatusEffectDB;
+    protected static IStatusEffectDB StatusEffectDB { get; } = StatsLocator.StatusEffectDB;
     public event Action<ADamageResult>? DamageReceived;
     public event Action<Modifier, ModChangeType>? ModChanged;
     public event Action<double>? Processed;

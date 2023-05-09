@@ -2,9 +2,9 @@
 
 namespace GameCore.ActionEffects;
 
-public abstract class AActionEffectRequest
+public abstract class BaseActionEffectRequest
 {
-    protected AActionEffectRequest(int actionType, int value1, int value2)
+    protected BaseActionEffectRequest(int actionType, int value1, int value2)
     {
         ActionType = actionType;
         Value1 = value1;

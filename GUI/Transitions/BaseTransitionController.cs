@@ -4,7 +4,7 @@ using GameCore.Utility;
 
 namespace GameCore.GUI;
 
-public abstract class ATransitionController
+public class BaseTransitionController
 {
     private TransitionRequest? _pendingTransition;
 

@@ -2,7 +2,7 @@
 
 namespace GameCore.Audio;
 
-public partial class AudioControllerNull : AAudioController
+public partial class AudioControllerNull : BaseAudioController
 {
     public AudioControllerNull() { }
     public override void _Ready() { }

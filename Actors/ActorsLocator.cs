@@ -1,25 +1,35 @@
-﻿using System.Collections.Generic;
+﻿using System;
 
 namespace GameCore.Actors;
 
 public static class ActorsLocator
 {
-    private static AActorBodyDB s_actorBodyDB = null!;
-    private static AActorDataDB s_actorDataDB = null!;
-    public static AActorBodyDB ActorBodyDB => s_actorBodyDB;
-    public static AActorDataDB ActorDataDB => s_actorDataDB;
+    private static IActorBodyPathDB? s_actorBodyDB;
+    private static readonly NullActorBodyPathDB s_nullActorBodyPathDB = new();
+    private static IActorDataDB? s_actorDataDB;
+    private static readonly NullActorDataDB s_nullActorDataDB = new();
+    public static IActorBodyPathDB ActorBodyDB => s_actorBodyDB ?? s_nullActorBodyPathDB;
+    public static IActorDataDB ActorDataDB => s_actorDataDB ?? s_nullActorDataDB;
 
-    public static void ProvideActorBodyDB(AActorBodyDB actorBodyDB) => s_actorBodyDB = actorBodyDB;
+    public static void ProvideActorBodyDB(IActorBodyPathDB actorBodyDB) => s_actorBodyDB = actorBodyDB;
 
-    public static void ProvideActorDataDB(AActorDataDB actorDataDB) => s_actorDataDB = actorDataDB;
+    public static void ProvideActorDataDB(IActorDataDB actorDataDB) => s_actorDataDB = actorDataDB;
 
-    public static List<string> CheckReferences()
+    private class NullActorBodyPathDB : IActorBodyPathDB
     {
-        List<string> unsetRefs = new();
-        if (s_actorBodyDB == null)
-            unsetRefs.Add("ActorBody DB");
-        if (s_actorDataDB == null)
-            unsetRefs.Add("ActorData DB");
-        return unsetRefs;
+        public string? GetById(string bodyId) => null;
+    }
+
+    private class NullActorDataDB : IActorDataDB
+    {
+        public bool TryGetData<T>(string key, out T? value) where T : AActorData
+        {
+            value = null;
+            return false;
+        }
+
+        public T? GetData<T>(string id) where T : AActorData => null;
+
+        public string[] GetKeys() => Array.Empty<string>();
     }
 }

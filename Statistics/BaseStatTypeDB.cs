@@ -3,7 +3,7 @@ using Gictionary = Godot.Collections.Dictionary;
 
 namespace GameCore.Statistics;
 
-public abstract class AStatTypeDB
+public abstract class BaseStatTypeDB
 {
     public abstract string[] GetTypeNames();
     public abstract string[]? GetValueEnumOptions(int statType);

@@ -1,34 +1,46 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace GameCore.Items;
 
 public static class ItemsLocator
 {
-    private static AEquipmentSlotCategoryDB s_equipmentSlotCategoryDB = null!;
-    private static AItemDB s_itemDB = null!;
-    private static AItemCategoryDB s_itemCategoryDB = null!;
-    public static AEquipmentSlotCategoryDB EquipmentSlotCategoryDB => s_equipmentSlotCategoryDB;
-    public static AItemDB ItemDB => s_itemDB;
-    public static AItemCategoryDB ItemCategoryDB => s_itemCategoryDB;
+    private static IEquipmentSlotCategoryDB? s_equipmentSlotCategoryDB;
+    private static readonly NullEquipmentSlotCategoryDB s_nullEquipmentSlotCategoryDB = new();
+    private static IItemDB? s_itemDB;
+    private static readonly NullItemDB s_nullItemDB = new();
+    private static IItemCategoryDB? s_itemCategoryDB;
+    private static readonly NullItemCategoryDB s_nullItemCategoryDB = new();
+    public static IEquipmentSlotCategoryDB EquipmentSlotCategoryDB => s_equipmentSlotCategoryDB ?? s_nullEquipmentSlotCategoryDB;
+    public static IItemDB ItemDB => s_itemDB ?? s_nullItemDB;
+    public static IItemCategoryDB ItemCategoryDB => s_itemCategoryDB ?? s_nullItemCategoryDB;
 
-    public static void ProvideEquipmentSlotCategoryDB(AEquipmentSlotCategoryDB equipmentSlotCategoryDB)
+    public static void ProvideEquipmentSlotCategoryDB(IEquipmentSlotCategoryDB equipmentSlotCategoryDB)
     {
         s_equipmentSlotCategoryDB = equipmentSlotCategoryDB;
     }
 
-    public static void ProvideItemDB(AItemDB itemDB) => s_itemDB = itemDB;
+    public static void ProvideItemDB(IItemDB itemDB) => s_itemDB = itemDB;
 
-    public static void ProvideItemCategoryDB(AItemCategoryDB itemCategoryDB) => s_itemCategoryDB = itemCategoryDB;
+    public static void ProvideItemCategoryDB(IItemCategoryDB itemCategoryDB) => s_itemCategoryDB = itemCategoryDB;
 
-    public static List<string> CheckReferences()
+    private class NullEquipmentSlotCategoryDB : IEquipmentSlotCategoryDB
     {
-        List<string> unsetRefs = new();
-        if (s_equipmentSlotCategoryDB == null)
-            unsetRefs.Add("EquipmentSlotCategory DB");
-        if (s_itemCategoryDB == null)
-            unsetRefs.Add("ItemCategory DB");
-        if (s_itemDB == null)
-            unsetRefs.Add("Item DB");
-        return unsetRefs;
+        public EquipmentSlotCategory? GetCategory(string id) => null;
+
+        public IReadOnlyCollection<EquipmentSlotCategory> GetCategoryPreset(string id) => Array.Empty<EquipmentSlotCategory>();
+    }
+
+    private class NullItemDB : IItemDB
+    {
+        public AItem? GetItem(string id) => null;
+
+        public IEnumerable<AItem> GetItemsByCategory(string itemCategoryId) => Array.Empty<AItem>();
+    }
+
+    private class NullItemCategoryDB : IItemCategoryDB
+    {
+        public IReadOnlyCollection<ItemCategory> GetCategories() => Array.Empty<ItemCategory>();
+        public ItemCategory? GetCategory(string id) => null;
     }
 }
