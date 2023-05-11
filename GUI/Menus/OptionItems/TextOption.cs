@@ -23,6 +23,7 @@ public partial class TextOption : OptionItem
 
     public override void _Ready()
     {
+        base._Ready();
         _label = GetNodeOrNull<Label>("Label");
         _label.Text = _labelText;
     }

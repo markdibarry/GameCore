@@ -35,6 +35,7 @@ public partial class KeyValueOption : OptionItem
 
     public override void _Ready()
     {
+        base._Ready();
         KeyLabel = GetNodeOrNull<Label>("%Key");
         KeyLabel.Text = _keyText;
         ValueLabel = GetNodeOrNull<Label>("%Value");

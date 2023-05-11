@@ -18,6 +18,7 @@ theme_override_constants/margin_bottom = 8
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
+mouse_filter = 2
 
 [node name="WindowContainer" parent="Foreground/PanelContainer" index="0" instance=ExtResource("2_lpcas")]
 layout_mode = 2

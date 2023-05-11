@@ -15,10 +15,10 @@ public abstract partial class OptionContainer : MarginContainer
     public int PreviousIndex { get; protected set; }
     public int FocusedIndex { get; protected set; }
     public OptionItem? FocusedItem => OptionItems.ElementAtOrDefault(FocusedIndex);
+    [Export] public bool MouseEnabled { get; set; } = true;
     public IList<OptionItem> OptionItems { get; } = new List<OptionItem>();
-    public event Action<OptionContainer>? ContainerUpdated;
     public event Action<OptionContainer, Direction>? FocusOOB;
-    public event Action? ItemFocused;
+    public event Action<OptionContainer, OptionItem?>? ItemFocused;
     public event Action<OptionItem>? ItemSelectionChanged;
 
     /// <summary>
@@ -37,6 +37,14 @@ public abstract partial class OptionContainer : MarginContainer
             FocusedIndex = AllSelectedIndex;
             FocusItem(AllSelectedIndex);
         }
+    }
+
+    public void FocusItem(OptionItem item)
+    {
+        int index = OptionItems.IndexOf(item);
+        if (item.Disabled || index == -1)
+            return;
+        FocusItem(index);
     }
 
     /// <summary>
@@ -58,7 +66,8 @@ public abstract partial class OptionContainer : MarginContainer
                 return;
             index = AllSelectedIndex;
         }
-        PreviousIndex = FocusedIndex;
+        if (PreviousIndex != FocusedIndex)
+            PreviousIndex = FocusedIndex;
         if (OptionItems.Count == 0)
             return;
         if (FocusedItem != null)
@@ -67,7 +76,7 @@ public abstract partial class OptionContainer : MarginContainer
         HandleSelectAll();
         if (FocusedItem != null)
             FocusedItem.Focused = true;
-        ItemFocused?.Invoke();
+        ItemFocused?.Invoke(this, FocusedItem);
     }
 
     public IEnumerable<OptionItem> GetSelectedItems() => OptionItems.Where(x => x.Selected);
@@ -121,7 +130,6 @@ public abstract partial class OptionContainer : MarginContainer
     public abstract void ClearOptionItems();
     public abstract void FocusDirection(Direction direction);
     public abstract void ResetContainerFocus();
-    protected void RaiseContainerUpdated() => ContainerUpdated?.Invoke(this);
     protected void RaiseFocusOOB(Direction direction) => FocusOOB?.Invoke(this, direction);
-    protected void RaiseItemFocused() => ItemFocused?.Invoke();
+    protected void RaiseItemFocused(OptionItem? optionItem) => ItemFocused?.Invoke(this, optionItem);
 }

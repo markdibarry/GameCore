@@ -1,15 +1,11 @@
-﻿using Godot;
+﻿using System;
+using Godot;
 
 namespace GameCore.GUI;
 
 public partial class OptionItem : MarginContainer
 {
-    public OptionItem()
-    {
-        DimWhenUnfocused = true;
-    }
-
-    private bool _dimWhenUnfocused;
+    private bool _dimWhenUnfocused = true;
     private bool _disabled;
     private bool _focused;
     private bool _selected;
@@ -44,7 +40,6 @@ public partial class OptionItem : MarginContainer
             HandleStateChange();
         }
     }
-
     public object? OptionData { get; set; }
     public bool Selected
     {
@@ -55,13 +50,16 @@ public partial class OptionItem : MarginContainer
             HandleStateChange();
         }
     }
+    public event Action<OptionItem>? MouseEnteredItem;
 
     public override void _Ready()
     {
         HandleStateChange();
+        if (MouseFilter != MouseFilterEnum.Ignore)
+            MouseEntered += OnMouseEntered;
     }
 
-    public void HandleStateChange()
+    protected virtual void HandleStateChange()
     {
         Color color;
         if (Disabled)
@@ -71,5 +69,12 @@ public partial class OptionItem : MarginContainer
         else
             color = Colors.DimGrey;
         Modulate = color;
+    }
+
+    private void OnMouseEntered()
+    {
+        if (Disabled || ProcessMode == ProcessModeEnum.Disabled)
+            return;
+        MouseEnteredItem?.Invoke(this);
     }
 }

@@ -137,10 +137,8 @@ public partial class WindowContainer : MarginContainer
 
     private void OnContentChanged() => _sizeDirty = true;
 
-    private void OnItemFocused()
+    private void OnItemFocused(OptionContainer optionContainer, OptionItem? optionItem)
     {
-        if (ClipContent is not OptionContainer optionContainer)
-            return;
         optionContainer.Position = GetScrollPosition(optionContainer.FocusedItem);
     }
 

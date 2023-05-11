@@ -207,6 +207,12 @@ public partial class GridOptionContainer : OptionContainer
         if (node is not OptionItem optionItem)
             return;
         OptionItems.Add(optionItem);
+        if (MouseEnabled)
+        {
+            optionItem.MouseFilter = MouseFilterEnum.Stop;
+            optionItem.MouseEnteredItem += OnMouseEnteredItem;
+        }
+
         optionItem.DimWhenUnfocused = DimItems;
         UpdateRows();
     }
@@ -218,6 +224,11 @@ public partial class GridOptionContainer : OptionContainer
         OptionItems.Remove(optionItem);
         optionItem.SelectionCursor?.QueueFree();
         UpdateRows();
+    }
+
+    private void OnMouseEnteredItem(OptionItem optionItem)
+    {
+        FocusItem(optionItem);
     }
 
     private void SetNodeReferences()

@@ -43,9 +43,7 @@ public partial class OptionSubMenu : SubMenu
     {
         if (optionContainer.OptionItems.Count == 0)
             return;
-        CurrentContainer?.LeaveContainerFocus();
-        OnFocusContainer(optionContainer);
-        CurrentContainer = optionContainer;
+        SetContainer(optionContainer);
         optionContainer.FocusContainer(index);
     }
 
@@ -61,7 +59,7 @@ public partial class OptionSubMenu : SubMenu
 
     protected virtual void OnFocusOOB(OptionContainer container, Direction direction) { }
 
-    protected virtual void OnItemFocused() { }
+    protected virtual void OnItemFocused(OptionContainer optionContainer, OptionItem? optionItem) { }
 
     protected virtual void OnSelectPressed() { }
 
@@ -98,32 +96,23 @@ public partial class OptionSubMenu : SubMenu
         optionContainer.ItemFocused += OnItemFocusedBase;
         optionContainer.ItemSelectionChanged += OnItemSelectionChanged;
         optionContainer.FocusOOB += OnFocusOOB;
-        optionContainer.ContainerUpdated += OnContainerChanged;
     }
 
-    private void MoveCursorToItem(OptionItem? optionItem)
+    private void MoveCursorToItem(OptionItem optionItem)
     {
-        if (optionItem == null)
-            return;
         _cursor.MoveToTarget(optionItem);
     }
 
-    private void OnContainerChanged(OptionContainer optionContainer)
+    private void OnItemFocusedBase(OptionContainer optionContainer, OptionItem? optionItem)
     {
-        if (optionContainer == CurrentContainer)
-            MoveCursorToItem(optionContainer.FocusedItem);
-    }
-
-    private void OnItemFocusedBase()
-    {
-        _cursor.Visible = CurrentContainer?.FocusedItem != null;
-        if (CurrentContainer != null)
-        {
-            if (CurrentContainer.FocusedIndex != CurrentContainer.PreviousIndex)
-                Audio.PlaySoundFX(FocusedSoundPath);
-            MoveCursorToItem(CurrentContainer.FocusedItem);
-        }
-        OnItemFocused();
+        _cursor.Visible = optionItem != null;
+        if (CurrentContainer != optionContainer || optionContainer.FocusedIndex != optionContainer.PreviousIndex)
+            Audio.PlaySoundFX(FocusedSoundPath);
+        if (CurrentContainer != optionContainer)
+            SetContainer(optionContainer);
+        if (optionItem != null)
+            MoveCursorToItem(optionItem);
+        OnItemFocused(optionContainer, optionItem);
     }
 
     private void OnItemSelectionChanged(OptionItem optionItem)
@@ -155,5 +144,12 @@ public partial class OptionSubMenu : SubMenu
 
         Audio.PlaySoundFX(SelectedSoundPath);
         OnSelectPressed();
+    }
+
+    private void SetContainer(OptionContainer optionContainer)
+    {
+        CurrentContainer?.LeaveContainerFocus();
+        OnFocusContainer(optionContainer);
+        CurrentContainer = optionContainer;
     }
 }
