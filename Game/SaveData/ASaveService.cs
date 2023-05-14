@@ -10,7 +10,8 @@ namespace GameCore;
 
 public abstract class ASaveService<T> where T : IGameSave
 {
-    private static readonly string s_globalPath = ProjectSettings.GlobalizePath(Config.SavePath);
+    private static readonly string s_saveFullPath = Config.SaveFullPath;
+    private static readonly string s_saveNamePrefix = Config.SaveNamePrefix;
     private static readonly string[] s_ignoredPropertyNames = new string[]
     {
         nameof(GodotObject.NativeInstance),
@@ -34,7 +35,7 @@ public abstract class ASaveService<T> where T : IGameSave
     public static List<(string, T)> GetAllSaves()
     {
         return Directory
-            .EnumerateFiles(s_globalPath, $"{Config.SavePrefix}*")
+            .EnumerateFiles(s_saveFullPath, $"{s_saveNamePrefix}*")
             .Select(x =>
             {
                 string fileName = Path.GetFileName(x);
@@ -47,13 +48,13 @@ public abstract class ASaveService<T> where T : IGameSave
 
     public static T? GetGameSave(string fileName)
     {
-        string content = File.ReadAllText(s_globalPath + fileName);
+        string content = File.ReadAllText(s_saveFullPath + fileName);
         return JsonSerializer.Deserialize<T>(content);
     }
 
     public static void SaveGame(T gameSave, string? fileName = null)
     {
-        fileName ??= $"{Config.SavePrefix}_{DateTime.UtcNow.Ticks}.json";
+        fileName ??= $"{s_saveNamePrefix}_{DateTime.UtcNow.Ticks}.json";
         JsonSerializerOptions options = new()
         {
             WriteIndented = true,
@@ -63,6 +64,6 @@ public abstract class ASaveService<T> where T : IGameSave
             }
         };
         string saveString = JsonSerializer.Serialize(gameSave, options);
-        File.WriteAllText(s_globalPath + fileName, saveString);
+        File.WriteAllText(s_saveFullPath + fileName, saveString);
     }
 }

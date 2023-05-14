@@ -34,11 +34,11 @@ public static class GDEx
 
     public static string GetScenePath([CallerFilePath] string csPath = "")
     {
-        string godotRoot = Config.GodotRoot;
+        string godotRoot = Config.ProjectFullPath;
         if (!csPath.EndsWith(".cs"))
-            throw new Exception($"Caller '{csPath}' is not cs file.");
+            throw new Exception($"Caller '{csPath}' is not a .cs file.");
         if (!csPath.StartsWith(godotRoot))
-            throw new Exception($"Caller '{csPath}' is outside '{godotRoot}'.");
+            throw new Exception($"Caller '{csPath}' cannot be found inside '{godotRoot}'.");
 
         string resPath = csPath[godotRoot.Length..];
         resPath = Path.ChangeExtension(resPath, ".tscn");
