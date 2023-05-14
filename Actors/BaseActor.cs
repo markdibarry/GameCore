@@ -5,14 +5,14 @@ using GameCore.Utility;
 
 namespace GameCore.Actors;
 
-public abstract class AActor : IDamageable
+public abstract class BaseActor : IDamageable
 {
-    protected AActor(
+    protected BaseActor(
         string actorId,
         string actorBodyId,
         string actorName,
         string equipmentSlotPresetId,
-        AInventory inventory)
+        BaseInventory inventory)
     {
         ActorId = actorId;
         ActorBodyId = actorBodyId;
@@ -21,24 +21,24 @@ public abstract class AActor : IDamageable
         EquipmentSlotPresetId = equipmentSlotPresetId;
     }
 
-    private AActorBody? _actorBodyInternal;
-    public virtual AActorBody? ActorBody => _actorBodyInternal;
+    private BaseActorBody? _actorBodyInternal;
+    public virtual BaseActorBody? ActorBody => _actorBodyInternal;
     public string ActorBodyId { get; set; }
     public string ActorId { get; set; }
     public int Role { get; protected set; }
-    public abstract AEquipment Equipment { get; }
+    public abstract BaseEquipment Equipment { get; }
     public string EquipmentSlotPresetId { get; }
-    public AInventory Inventory { get; set; }
+    public BaseInventory Inventory { get; set; }
     public string Name { get; set; }
-    public abstract AStats Stats { get; }
+    public abstract BaseStats Stats { get; }
 
-    public event Action<AActor>? Defeated;
-    public event Action<AActor, ADamageResult>? DamageReceived;
-    public event Action<AActor, Modifier, ModChangeType>? ModChanged;
-    public event Action<AActor>? StatsChanged;
-    public event Action<AActor, int, ModChangeType>? StatusEffectChanged;
+    public event Action<BaseActor>? Defeated;
+    public event Action<BaseActor, BaseDamageResult>? DamageReceived;
+    public event Action<BaseActor, Modifier, ModChangeType>? ModChanged;
+    public event Action<BaseActor>? StatsChanged;
+    public event Action<BaseActor, int, ModChangeType>? StatusEffectChanged;
 
-    public virtual T CreateBody<T>() where T : AActorBody
+    public virtual T CreateBody<T>() where T : BaseActorBody
     {
         string? bodyPath = ActorsLocator.ActorBodyDB.GetById(ActorBodyId);
         if (bodyPath == null)
@@ -65,11 +65,11 @@ public abstract class AActor : IDamageable
 
     public abstract void SetRole(int role, bool setActorBodyRole = true);
 
-    public virtual void SetActorBody(AActorBody? actorBody) => _actorBodyInternal = actorBody;
+    public virtual void SetActorBody(BaseActorBody? actorBody) => _actorBodyInternal = actorBody;
 
     protected void RaiseDefeated() => Defeated?.Invoke(this);
 
-    protected abstract void OnEquipmentSet(EquipmentSlot slot, AItem? oldItem, AItem? newItem);
+    protected abstract void OnEquipmentSet(EquipmentSlot slot, BaseItem? oldItem, BaseItem? newItem);
 
     private void OnModChanged(Modifier mod, ModChangeType changeType)
     {
@@ -78,7 +78,7 @@ public abstract class AActor : IDamageable
 
     private void OnStatsChanged() => StatsChanged?.Invoke(this);
 
-    private void OnDamageRecieved(ADamageResult damageResult)
+    private void OnDamageRecieved(BaseDamageResult damageResult)
     {
         damageResult.RecieverName = Name;
         DamageReceived?.Invoke(this, damageResult);

@@ -22,13 +22,13 @@ public static class ActorsLocator
 
     private class NullActorDataDB : IActorDataDB
     {
-        public bool TryGetData<T>(string key, out T? value) where T : AActorData
+        public bool TryGetData<T>(string key, out T? value) where T : BaseActorData
         {
             value = null;
             return false;
         }
 
-        public T? GetData<T>(string id) where T : AActorData => null;
+        public T? GetData<T>(string id) where T : BaseActorData => null;
 
         public string[] GetKeys() => Array.Empty<string>();
     }

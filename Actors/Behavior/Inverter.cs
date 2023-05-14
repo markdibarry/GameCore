@@ -2,9 +2,9 @@
 
 namespace GameCore.Actors.Behavior;
 
-public class Inverter : ABTNode
+public class Inverter : BaseBTNode
 {
-    public Inverter(List<ABTNode> children)
+    public Inverter(List<BaseBTNode> children)
         : base(children)
     { }
 

@@ -3,9 +3,9 @@ using Godot;
 
 namespace GameCore.Statistics;
 
-public abstract partial class AHurtBox : AreaBox
+public abstract partial class BaseHurtBox : AreaBox
 {
-    public event Action<ADamageRequest>? DamageRequested;
+    public event Action<BaseDamageRequest>? DamageRequested;
 
     public override void _Ready()
     {
@@ -15,7 +15,7 @@ public abstract partial class AHurtBox : AreaBox
 
     public void OnAreaEntered(Area2D area2D)
     {
-        if (area2D is not AHitBox hitBox)
+        if (area2D is not BaseHitBox hitBox)
             return;
         DamageRequested?.Invoke(hitBox.GetDamageRequest());
     }

@@ -60,7 +60,7 @@ public partial class Modifier : Resource
     // TODO Add special case handling i.e. +5% for every 100 enemies killed
     public int Apply(int baseValue) => Op.Compute(baseValue, Value);
 
-    public void InitConditions(AStats stats)
+    public void InitConditions(BaseStats stats)
     {
         foreach (Condition condition in Conditions)
             condition.SetStats(stats);

@@ -4,6 +4,6 @@ namespace GameCore.Items;
 
 public interface IItemDB
 {
-    AItem? GetItem(string id);
-    IEnumerable<AItem> GetItemsByCategory(string itemCategoryId);
+    BaseItem? GetItem(string id);
+    IEnumerable<BaseItem> GetItemsByCategory(string itemCategoryId);
 }

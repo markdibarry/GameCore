@@ -2,7 +2,7 @@
 
 public class StatusEffect : IStatusEffect
 {
-    public StatusEffect(AStats stats, StatusEffectData effectData)
+    public StatusEffect(BaseStats stats, StatusEffectData effectData)
     {
         Stats = stats;
         EffectData = effectData;
@@ -16,7 +16,7 @@ public class StatusEffect : IStatusEffect
     private readonly Condition? _tickCondition;
     public StatusEffectData EffectData { get; }
     public int EffectType => EffectData.EffectType;
-    public AStats Stats { get; }
+    public BaseStats Stats { get; }
 
     public void CallEffectTick()
     {

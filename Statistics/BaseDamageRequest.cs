@@ -2,9 +2,9 @@
 
 namespace GameCore.Statistics;
 
-public abstract class ADamageRequest
+public abstract class BaseDamageRequest
 {
-    protected ADamageRequest()
+    protected BaseDamageRequest()
     {
         SourceName = string.Empty;
         Value = 1;

@@ -6,9 +6,9 @@ using GameCore.Utility;
 
 namespace GameCore.Statistics;
 
-public abstract class AStats
+public abstract class BaseStats
 {
-    protected AStats(IDamageable damageable, IEnumerable<Stat> statLookup, IEnumerable<Modifier> mods)
+    protected BaseStats(IDamageable damageable, IEnumerable<Stat> statLookup, IEnumerable<Modifier> mods)
     {
         StatsOwner = damageable;
         DamageToProcess = new();
@@ -25,7 +25,7 @@ public abstract class AStats
     /// For menu stat mocking
     /// </summary>
     /// <param name="stats"></param>
-    protected AStats(AStats stats)
+    protected BaseStats(BaseStats stats)
         : this(null!, Array.Empty<Stat>(), Array.Empty<Modifier>())
     {
         foreach (var pair in stats.StatLookup)
@@ -35,15 +35,15 @@ public abstract class AStats
     }
 
     [JsonIgnore]
-    public Queue<ADamageRequest> DamageToProcess { get; }
-    public ADamageResult? CurrentDamageResult { get; private set; }
+    public Queue<BaseDamageRequest> DamageToProcess { get; }
+    public BaseDamageResult? CurrentDamageResult { get; private set; }
     [JsonConverter(typeof(ModifierLookupConverter))]
     public Dictionary<int, List<Modifier>> Modifiers { get; }
     public Dictionary<int, Stat> StatLookup { get; }
     public IDamageable StatsOwner { get; }
     protected List<IStatusEffect> StatusEffects { get; }
     protected static IStatusEffectDB StatusEffectDB { get; } = StatsLocator.StatusEffectDB;
-    public event Action<ADamageResult>? DamageReceived;
+    public event Action<BaseDamageResult>? DamageReceived;
     public event Action<Modifier, ModChangeType>? ModChanged;
     public event Action<double>? Processed;
     public event Action? StatChanged;
@@ -111,7 +111,7 @@ public abstract class AStats
         return StatusEffects.Any(x => x.EffectType == statusEffectType);
     }
 
-    public void OnDamageReceived(ADamageRequest damageRequest) => ReceiveDamageRequest(damageRequest);
+    public void OnDamageReceived(BaseDamageRequest damageRequest) => ReceiveDamageRequest(damageRequest);
 
     public void Process(double delta, bool processEffects)
     {
@@ -120,7 +120,7 @@ public abstract class AStats
         CurrentDamageResult = DamageToProcess.Count > 0 ? HandleDamage(DamageToProcess.Dequeue()) : null;
     }
 
-    public void ReceiveDamageRequest(ADamageRequest damageRequest)
+    public void ReceiveDamageRequest(BaseDamageRequest damageRequest)
     {
         DamageToProcess.Enqueue(damageRequest);
     }
@@ -139,7 +139,7 @@ public abstract class AStats
         RaiseModChanged(mod, ModChangeType.Remove);
     }
 
-    protected abstract ADamageResult HandleDamage(ADamageRequest damageData);
+    protected abstract BaseDamageResult HandleDamage(BaseDamageRequest damageData);
 
     protected void OnActivationConditionMet(Modifier mod)
     {
@@ -154,7 +154,7 @@ public abstract class AStats
 
     protected void RaiseModChanged(Modifier mod, ModChangeType modChange) => ModChanged?.Invoke(mod, modChange);
 
-    protected void RaiseDamageReceived(ADamageResult damageResult) => DamageReceived?.Invoke(damageResult);
+    protected void RaiseDamageReceived(BaseDamageResult damageResult) => DamageReceived?.Invoke(damageResult);
 
     protected void RaiseStatChanged() => StatChanged?.Invoke();
 

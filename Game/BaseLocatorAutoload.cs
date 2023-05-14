@@ -3,7 +3,7 @@
 namespace GameCore;
 
 [Tool]
-public abstract partial class ALocatorAutoload : Node
+public abstract partial class BaseLocatorAutoload : Node
 {
     public override void _Process(double delta)
     {

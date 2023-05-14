@@ -7,7 +7,7 @@ using Gictionary = Godot.Collections.Dictionary;
 namespace GameCore.Actors;
 
 [Tool]
-public abstract partial class ASpawner : Node2D
+public abstract partial class BaseSpawner : Node2D
 {
     protected static IActorDataDB ActorDataDB { get; set; } = ActorsLocator.ActorDataDB;
     private string _actorDataId = string.Empty;
@@ -29,13 +29,13 @@ public abstract partial class ASpawner : Node2D
             NotifyPropertyListChanged();
         }
     }
-    public AActorBody? ActorBody { get; set; }
-    public AActorBody? SpawnedActorBody { get; set; }
+    public BaseActorBody? ActorBody { get; set; }
+    public BaseActorBody? SpawnedActorBody { get; set; }
     public bool SpawnPending { get; set; }
     public VisibleOnScreenNotifier2D VisibleOnScreenNotifier2D { get; private set; } = null!;
     protected abstract int DefaultActorRole { get; }
 
-    public event Action<ASpawner>? SpawnRequested;
+    public event Action<BaseSpawner>? SpawnRequested;
 
     public override Godot.Collections.Array<Gictionary> _GetPropertyList()
     {
@@ -103,7 +103,7 @@ public abstract partial class ASpawner : Node2D
 
         VisibleOnScreenNotifier2D = GetNode<VisibleOnScreenNotifier2D>(nameof(VisibleOnScreenNotifier2D));
         VisibleOnScreenNotifier2D.ScreenExited += OnScreenExited;
-        ActorBody = this.GetChildren<AActorBody>().FirstOrDefault();
+        ActorBody = this.GetChildren<BaseActorBody>().FirstOrDefault();
         if (ActorBody != null)
             RemoveChild(ActorBody);
         RaiseSpawnRequested();
@@ -116,15 +116,15 @@ public abstract partial class ASpawner : Node2D
         ActorBody?.QueueFree();
     }
 
-    public virtual AActorBody? Spawn()
+    public virtual BaseActorBody? Spawn()
     {
         if (ActorData == null && ActorDataId != string.Empty)
-            ActorData = ActorDataDB.GetData<AActorData>(ActorDataId)?.Clone();
+            ActorData = ActorDataDB.GetData<BaseActorData>(ActorDataId)?.Clone();
         if (ActorData == null || ActorBody == null)
             return null;
 
-        AActor actor = ((AActorData)ActorData).CreateActor();
-        AActorBody actorBody = (AActorBody)ActorBody.Duplicate();
+        BaseActor actor = ((BaseActorData)ActorData).CreateActor();
+        BaseActorBody actorBody = (BaseActorBody)ActorBody.Duplicate();
         actorBody.SetRole(DefaultActorRole);
         actor.SetActorBody(actorBody);
         actorBody.SetActor(actor);
@@ -140,7 +140,7 @@ public abstract partial class ASpawner : Node2D
     {
         if (!Engine.IsEditorHint() || !_ready)
             return;
-        ActorData = ActorDataDB.GetData<AActorData>(ActorDataId)?.Clone();
+        ActorData = ActorDataDB.GetData<BaseActorData>(ActorDataId)?.Clone();
         NotifyPropertyListChanged();
     }
 
@@ -156,7 +156,7 @@ public abstract partial class ASpawner : Node2D
         SpawnRequested?.Invoke(this);
     }
 
-    private void OnActorDefeated(AActor actor)
+    private void OnActorDefeated(BaseActor actor)
     {
         actor.Defeated -= OnActorDefeated;
         if (!Respawn)

@@ -29,9 +29,9 @@ public abstract partial class AHUD : CanvasLayer
         ProcessMode = ProcessModeEnum.Inherit;
     }
 
-    public abstract void SubscribeActorBodyEvents(AActorBody actorBody);
+    public abstract void SubscribeActorBodyEvents(BaseActorBody actorBody);
 
-    public abstract void UnsubscribeActorBodyEvents(AActorBody actorBody);
+    public abstract void UnsubscribeActorBodyEvents(BaseActorBody actorBody);
 
     protected void ProcessQueue()
     {

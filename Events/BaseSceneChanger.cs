@@ -4,15 +4,13 @@ using Godot;
 
 namespace GameCore.Events;
 
-public abstract partial class SceneChangerBase : Area2D
+public abstract partial class BaseSceneChanger : Area2D
 {
     protected BaseTransitionController TController { get; } = Locator.TransitionController;
     protected GUIController GUIController { get; } = Locator.Root.GUIController;
-    protected AGameSession? GameSession { get; } = Locator.Session;
-    [Export]
-    public bool Automatic { get; set; }
-    [Export(PropertyHint.File)]
-    public string PackedScenePath { get; set; } = string.Empty;
+    protected BaseGameSession? GameSession { get; } = Locator.Session;
+    [Export] public bool Automatic { get; set; }
+    [Export(PropertyHint.File)] public string PackedScenePath { get; set; } = string.Empty;
     public bool IsActive { get; set; }
 
     public override void _Ready()

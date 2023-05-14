@@ -21,14 +21,14 @@ public class EquipmentSlot
     public EquipmentSlotCategory SlotCategory { get; }
     public ItemStack? ItemStack { get; set; }
     public List<Modifier> Modifiers { get; } = new();
-    public AItem? Item => ItemStack?.Item;
+    public BaseItem? Item => ItemStack?.Item;
 
-    public bool IsCompatible(AItem item)
+    public bool IsCompatible(BaseItem item)
     {
         return Array.IndexOf(SlotCategory.ItemCategoryIds, item.ItemCategory.Id) != -1;
     }
 
-    public void RemoveItem(AActor actor)
+    public void RemoveItem(BaseActor actor)
     {
         if (ItemStack == null)
             return;
@@ -38,7 +38,7 @@ public class EquipmentSlot
         ItemStack = null;
     }
 
-    public bool TrySetItem(AActor actor, ItemStack newItemStack)
+    public bool TrySetItem(BaseActor actor, ItemStack newItemStack)
     {
         if (!newItemStack.CanReserve())
             return false;
@@ -54,19 +54,19 @@ public class EquipmentSlot
         return true;
     }
 
-    private void AddModifiersToStats(AStats stats)
+    private void AddModifiersToStats(BaseStats stats)
     {
         foreach (Modifier mod in Modifiers)
             stats.AddMod(mod);
     }
 
-    private void CloneItemModifiers(AItem item)
+    private void CloneItemModifiers(BaseItem item)
     {
         foreach (Modifier mod in item.Modifiers)
             Modifiers.Add(new Modifier(mod));
     }
 
-    private void RemoveModifiersFromStats(AStats stats)
+    private void RemoveModifiersFromStats(BaseStats stats)
     {
         foreach (Modifier mod in Modifiers)
             stats.RemoveMod(mod);

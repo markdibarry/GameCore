@@ -3,14 +3,14 @@ using System.Linq;
 
 namespace GameCore.Items;
 
-public abstract class AInventory
+public abstract class BaseInventory
 {
-    protected AInventory()
+    protected BaseInventory()
     {
         _itemStacks = new();
     }
 
-    protected AInventory(IEnumerable<ItemStack> itemStacks)
+    protected BaseInventory(IEnumerable<ItemStack> itemStacks)
     {
         _itemStacks = itemStacks.ToList();
     }
@@ -34,7 +34,7 @@ public abstract class AInventory
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
-    public IReadOnlyCollection<ItemStack> GetItemStacks(AItem item) => GetItemStacks(item.Id);
+    public IReadOnlyCollection<ItemStack> GetItemStacks(BaseItem item) => GetItemStacks(item.Id);
 
     /// <summary>
     /// Returns ItemStacks matching the category Id provided.
@@ -53,7 +53,7 @@ public abstract class AInventory
     /// <param name="item"></param>
     /// <param name="amount"></param>
     /// <returns>The number of items unable to be added to the inventory.</returns>
-    public int AddItem(AItem item, int amount = 1)
+    public int AddItem(BaseItem item, int amount = 1)
     {
         int leftOver = amount;
         IReadOnlyCollection<ItemStack> itemStacks = GetItemStacks(item);
@@ -118,7 +118,7 @@ public abstract class AInventory
     /// <param name="item"></param>
     /// <param name="amount"></param>
     /// <returns>The number of items unable to be removed from the inventory.</returns>
-    public int RemoveItem(AItem item, int amount = 1)
+    public int RemoveItem(BaseItem item, int amount = 1)
     {
         int leftOver = amount;
         IReadOnlyCollection<ItemStack> itemStacks = GetItemStacks(item);

@@ -4,7 +4,7 @@ public interface IStatusEffect
 {
     StatusEffectData EffectData { get; }
     int EffectType { get; }
-    AStats Stats { get; }
+    BaseStats Stats { get; }
     void CallEffectTick();
     void SubscribeCondition();
     void UnsubscribeCondition();

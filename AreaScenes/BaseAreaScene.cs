@@ -6,7 +6,7 @@ using Godot;
 
 namespace GameCore.AreaScenes;
 
-public partial class AAreaScene : Node2D
+public partial class BaseAreaScene : Node2D
 {
     public CanvasLayer FocusLayer { get; private set; } = null!;
     public CanvasLayer ActorsContainer { get; private set; } = null!;
@@ -22,34 +22,34 @@ public partial class AAreaScene : Node2D
 
     public override void _ExitTree()
     {
-        foreach (var actorBody in ActorsContainer.GetChildren<AActorBody>())
+        foreach (var actorBody in ActorsContainer.GetChildren<BaseActorBody>())
             actorBody.CleanUpActorBody();
     }
 
-    public void AddActorBody(AActorBody actorBody)
+    public void AddActorBody(BaseActorBody actorBody)
     {
         HUD.SubscribeActorBodyEvents(actorBody);
         ActorsContainer.AddChild(actorBody);
     }
 
-    public void MoveToActorContainer(AActorBody actorBody)
+    public void MoveToActorContainer(BaseActorBody actorBody)
     {
         FocusLayer.RemoveChild(actorBody);
         ActorsContainer.AddChild(actorBody);
     }
 
-    public void MoveToFocusLayer(AActorBody actorBody)
+    public void MoveToFocusLayer(BaseActorBody actorBody)
     {
         ActorsContainer.RemoveChild(actorBody);
         FocusLayer.AddChild(actorBody);
     }
 
-    public IEnumerable<AActorBody> GetAllActorBodies()
+    public IEnumerable<BaseActorBody> GetAllActorBodies()
     {
-        return ActorsContainer.GetChildren<AActorBody>();
+        return ActorsContainer.GetChildren<BaseActorBody>();
     }
 
-    public IEnumerable<AActorBody> GetAllActorBodiesWithinView()
+    public IEnumerable<BaseActorBody> GetAllActorBodiesWithinView()
     {
         GameCamera gameCamera = Locator.Root.GameCamera;
         return gameCamera.FilterInView(GetAllActorBodies());
@@ -72,7 +72,7 @@ public partial class AAreaScene : Node2D
 
     public void Resume() => SetDeferred(PropertyName.ProcessMode, (long)ProcessModeEnum.Inherit);
 
-    public void RemoveActorBody(AActorBody actorBody)
+    public void RemoveActorBody(BaseActorBody actorBody)
     {
         ActorsContainer.RemoveChild(actorBody);
         HUD.UnsubscribeActorBodyEvents(actorBody);
@@ -80,16 +80,16 @@ public partial class AAreaScene : Node2D
 
     public void OnGameStateChanged(GameState gameState)
     {
-        foreach (AActorBody actor in ActorsContainer.GetChildren<AActorBody>())
+        foreach (BaseActorBody actor in ActorsContainer.GetChildren<BaseActorBody>())
             actor.OnGameStateChanged(gameState);
     }
 
-    public void StartActionSequence(IEnumerable<AActor> actors)
+    public void StartActionSequence(IEnumerable<BaseActor> actors)
     {
         Pause();
-        foreach (AActor actor in actors)
+        foreach (BaseActor actor in actors)
         {
-            if (actor.ActorBody is not AActorBody actorBody)
+            if (actor.ActorBody is not BaseActorBody actorBody)
                 continue;
             MoveToFocusLayer(actorBody);
             actorBody.SetForActionSequence(true);
@@ -100,7 +100,7 @@ public partial class AAreaScene : Node2D
 
     public void StopActionSequence()
     {
-        foreach (AActorBody actorBody in FocusLayer.GetChildren<AActorBody>())
+        foreach (BaseActorBody actorBody in FocusLayer.GetChildren<BaseActorBody>())
         {
             MoveToActorContainer(actorBody);
             actorBody.SetForActionSequence(false);
@@ -109,24 +109,24 @@ public partial class AAreaScene : Node2D
         Resume();
     }
 
-    private void OnSpawnRequested(ASpawner spawner)
+    private void OnSpawnRequested(BaseSpawner spawner)
     {
         if (!spawner.SpawnPending)
             return;
-        AActorBody? actorBody = spawner.Spawn();
+        BaseActorBody? actorBody = spawner.Spawn();
         if (actorBody != null)
             AddActorBody(actorBody);
     }
 
     private void ConnectHUDToExistingActors()
     {
-        foreach (AActorBody actorBody in ActorsContainer.GetChildren<AActorBody>())
+        foreach (BaseActorBody actorBody in ActorsContainer.GetChildren<BaseActorBody>())
             HUD.SubscribeActorBodyEvents(actorBody);
     }
 
     private void ConnectSpawners()
     {
-        foreach (ASpawner spawner in ActorsContainer.GetChildren<ASpawner>())
+        foreach (BaseSpawner spawner in ActorsContainer.GetChildren<BaseSpawner>())
         {
             spawner.SpawnRequested += OnSpawnRequested;
             OnSpawnRequested(spawner);

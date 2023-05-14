@@ -11,8 +11,8 @@ public abstract class BaseActionEffectRequest
         Value2 = value2;
     }
 
-    public abstract AActorBody? User { get; }
-    public abstract AActor[] Targets { get; }
+    public abstract BaseActorBody? User { get; }
+    public abstract BaseActor[] Targets { get; }
     public int ActionType { get; }
     public int Value1 { get; }
     public int Value2 { get; }

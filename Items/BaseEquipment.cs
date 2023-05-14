@@ -5,24 +5,24 @@ using GameCore.Actors;
 
 namespace GameCore.Items;
 
-public class AEquipment
+public class BaseEquipment
 {
-    public AEquipment(AInventory inventory, IEnumerable<EquipmentSlotCategory> categories)
+    public BaseEquipment(BaseInventory inventory, IEnumerable<EquipmentSlotCategory> categories)
     {
         _inventory = inventory;
         _slots = categories.Select(x => new EquipmentSlot(x)).ToArray();
     }
 
-    public AEquipment(AInventory inventory, EquipmentSlot[] slots)
+    public BaseEquipment(BaseInventory inventory, EquipmentSlot[] slots)
     {
         _inventory = inventory;
         _slots = slots;
     }
 
-    private readonly AInventory _inventory;
+    private readonly BaseInventory _inventory;
     private readonly EquipmentSlot[] _slots;
     public IReadOnlyCollection<EquipmentSlot> Slots => _slots;
-    public Action<EquipmentSlot, AItem?, AItem?>? EquipmentSetCallback { get; set; }
+    public Action<EquipmentSlot, BaseItem?, BaseItem?>? EquipmentSetCallback { get; set; }
 
     public IEnumerable<EquipmentSlot> GetSlotsByType(string itemCategoryId)
     {
@@ -34,7 +34,7 @@ public class AEquipment
         return _slots.FirstOrDefault(x => x.SlotCategory.Id.Equals(slotCategoryId));
     }
 
-    public bool TrySetItem(AActor actor, EquipmentSlot slot, AItem item)
+    public bool TrySetItem(BaseActor actor, EquipmentSlot slot, BaseItem item)
     {
         ItemStack? itemStack = _inventory.GetItemStacks(item)
             .FirstOrDefault(x => x.CanReserve());
@@ -43,20 +43,20 @@ public class AEquipment
         return TrySetItem(actor, slot, itemStack);
     }
 
-    public bool TrySetItem(AActor actor, EquipmentSlot slot, ItemStack newItemStack)
+    public bool TrySetItem(BaseActor actor, EquipmentSlot slot, ItemStack newItemStack)
     {
-        AItem? oldItem = slot.Item;
+        BaseItem? oldItem = slot.Item;
         if (!slot.TrySetItem(actor, newItemStack))
             return false;
         EquipmentSetCallback?.Invoke(slot, oldItem, newItemStack.Item);
         return true;
     }
 
-    public void RemoveItem(AActor actor, EquipmentSlot slot)
+    public void RemoveItem(BaseActor actor, EquipmentSlot slot)
     {
         if (slot.ItemStack == null)
             return;
-        AItem? oldItem = slot.Item;
+        BaseItem? oldItem = slot.Item;
         slot.RemoveItem(actor);
         EquipmentSetCallback?.Invoke(slot, oldItem, null);
     }

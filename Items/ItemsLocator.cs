@@ -33,9 +33,9 @@ public static class ItemsLocator
 
     private class NullItemDB : IItemDB
     {
-        public AItem? GetItem(string id) => null;
+        public BaseItem? GetItem(string id) => null;
 
-        public IEnumerable<AItem> GetItemsByCategory(string itemCategoryId) => Array.Empty<AItem>();
+        public IEnumerable<BaseItem> GetItemsByCategory(string itemCategoryId) => Array.Empty<BaseItem>();
     }
 
     private class NullItemCategoryDB : IItemCategoryDB

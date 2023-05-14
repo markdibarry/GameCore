@@ -8,7 +8,7 @@ public abstract partial class SubActor : CharacterBody2D
     {
     }
 
-    public AActorBody? ParentActor { get; set; }
+    public BaseActorBody? ParentActor { get; set; }
 
     public override void _Ready()
     {

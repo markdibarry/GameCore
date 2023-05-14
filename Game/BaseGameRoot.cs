@@ -27,7 +27,7 @@ public abstract partial class BaseGameRoot : Node
     public Node2D GameSessionContainer { get; set; } = null!;
     public GUIController GUIController { get; protected set; } = null!;
     public TransitionLayer Transition { get; protected set; } = null!;
-    public AGameSession? GameSession { get; private set; }
+    public BaseGameSession? GameSession { get; private set; }
     public GameState GameState { get; } = new();
     public abstract GUIInputHandler MenuInput { get; }
     public abstract InputHandler PlayerOneInput { get; }
@@ -78,7 +78,7 @@ public abstract partial class BaseGameRoot : Node
 
     public virtual async Task StartNewSession(IGameSave gameSave)
     {
-        GameSession = GDEx.Instantiate<AGameSession>(GameSessionScenePath);
+        GameSession = GDEx.Instantiate<BaseGameSession>(GameSessionScenePath);
         GameSessionContainer.AddChild(GameSession);
         GameSession.Init(GUIController, gameSave);
         await GUIController.CloseAllLayersAsync(true);

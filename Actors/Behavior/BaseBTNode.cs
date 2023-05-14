@@ -3,27 +3,27 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace GameCore.Actors.Behavior;
 
-public abstract class ABTNode
+public abstract class BaseBTNode
 {
     public enum NodeState { Running, Failure, Success };
 
-    protected ABTNode()
+    protected BaseBTNode()
     {
         Parent = null;
-        Children = new List<ABTNode>();
+        Children = new List<BaseBTNode>();
     }
 
-    protected ABTNode(List<ABTNode> children)
+    protected BaseBTNode(List<BaseBTNode> children)
         : this()
     {
-        foreach (ABTNode child in children)
+        foreach (BaseBTNode child in children)
         {
             child.Parent = this;
             Children.Add(child);
         }
     }
 
-    public void SetDependencies(AActorBody actorBody, Dictionary<string, object> blackBoard)
+    public void SetDependencies(BaseActorBody actorBody, Dictionary<string, object> blackBoard)
     {
         ActorBodyInternal = actorBody;
         _blackBoard = blackBoard;
@@ -33,10 +33,10 @@ public abstract class ABTNode
     }
 
     private Dictionary<string, object> _blackBoard = null!;
-    protected ABTNode? Parent { get; set; }
-    protected virtual AActorBody ActorBody => ActorBodyInternal;
-    protected AActorBody ActorBodyInternal { get; private set; } = null!;
-    protected List<ABTNode> Children { get; }
+    protected BaseBTNode? Parent { get; set; }
+    protected virtual BaseActorBody ActorBody => ActorBodyInternal;
+    protected BaseActorBody ActorBodyInternal { get; private set; } = null!;
+    protected List<BaseBTNode> Children { get; }
 
     public virtual void Init() { }
 

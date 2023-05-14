@@ -8,7 +8,7 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace GameCore;
 
-public abstract class ASaveService<T> where T : IGameSave
+public class BaseSaveService<T> where T : IGameSave
 {
     private static readonly string s_saveFullPath = Config.SaveFullPath;
     private static readonly string s_saveNamePrefix = Config.SaveNamePrefix;

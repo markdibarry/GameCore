@@ -4,9 +4,9 @@ using GameCore.Statistics;
 
 namespace GameCore.Items;
 
-public abstract class AItem : IEquatable<AItem>
+public abstract class BaseItem : IEquatable<BaseItem>
 {
-    protected AItem(string id, ItemCategory itemCategory)
+    protected BaseItem(string id, ItemCategory itemCategory)
     {
         Id = id;
         ItemCategory = itemCategory;
@@ -30,7 +30,7 @@ public abstract class AItem : IEquatable<AItem>
     public int Price { get; init; }
     public ItemUseData UseData { get; init; }
 
-    public bool Equals(AItem? other)
+    public bool Equals(BaseItem? other)
     {
         if (other == null)
             return false;

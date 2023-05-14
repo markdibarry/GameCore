@@ -2,15 +2,15 @@
 
 namespace GameCore.Actors.Behavior;
 
-public class Selector : ABTNode
+public class Selector : BaseBTNode
 {
-    public Selector(List<ABTNode> children)
+    public Selector(List<BaseBTNode> children)
         : base(children)
     { }
 
     public override NodeState Evaluate(double delta)
     {
-        foreach (ABTNode node in Children)
+        foreach (BaseBTNode node in Children)
         {
             switch (node.Evaluate(delta))
             {

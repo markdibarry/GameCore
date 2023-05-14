@@ -12,9 +12,9 @@ namespace GameCore.Actors;
 /// <summary>
 /// Base character object.
 /// </summary>
-public abstract partial class AActorBody : CharacterBody2D
+public abstract partial class BaseActorBody : CharacterBody2D
 {
-    protected AActorBody()
+    protected BaseActorBody()
     {
         Acceleration = 600;
         AnimationPlayer = null!;
@@ -34,8 +34,8 @@ public abstract partial class AActorBody : CharacterBody2D
     }
 
     protected static BaseAudioController Audio { get; } = Locator.Audio;
-    private AActor? _actorInternal;
-    public virtual AActor? Actor => _actorInternal;
+    private BaseActor? _actorInternal;
+    public virtual BaseActor? Actor => _actorInternal;
     public int Role { get; protected set; }
     public AnimationPlayer AnimationPlayer { get; private set; }
     public Sprite2D BodySprite { get; private set; }
@@ -46,7 +46,7 @@ public abstract partial class AActorBody : CharacterBody2D
     public bool InActionSequence { get; private set; }
     public IStateController StateController { get; protected set; }
     protected Node2D Body { get; set; } = null!;
-    public event Action<AActorBody>? Freeing;
+    public event Action<BaseActorBody>? Freeing;
 
     public override void _Ready()
     {
@@ -109,7 +109,7 @@ public abstract partial class AActorBody : CharacterBody2D
         Audio.PlaySoundFX(this, sound);
     }
 
-    public virtual void SetActor(AActor? actor) => _actorInternal = actor;
+    public virtual void SetActor(BaseActor? actor) => _actorInternal = actor;
 
     public void SetForActionSequence(bool enable)
     {
@@ -146,7 +146,7 @@ public abstract partial class AActorBody : CharacterBody2D
     {
         if (Actor == null)
             return;
-        foreach (AHurtBox hurtbox in HurtBoxes.GetChildren<AHurtBox>())
+        foreach (BaseHurtBox hurtbox in HurtBoxes.GetChildren<BaseHurtBox>())
             hurtbox.DamageRequested += Actor.Stats.OnDamageReceived;
     }
 

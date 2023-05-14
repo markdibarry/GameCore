@@ -7,7 +7,7 @@ namespace GameCore.Items;
 
 public class ItemStack
 {
-    public ItemStack(AItem item, int amount)
+    public ItemStack(BaseItem item, int amount)
     {
         _reservations = new List<Reservation>();
         Item = item;
@@ -16,7 +16,7 @@ public class ItemStack
 
     private readonly IList<Reservation> _reservations;
     public int Count { get; private set; }
-    public AItem Item { get; }
+    public BaseItem Item { get; }
     public IReadOnlyCollection<Reservation> Reservations => _reservations.ToList();
 
     public bool CanReserve() => _reservations.Count < Count;
@@ -60,7 +60,7 @@ public class ItemStack
         return leftOver;
     }
 
-    public void AddReservation(AActor actor, EquipmentSlot slot)
+    public void AddReservation(BaseActor actor, EquipmentSlot slot)
     {
         if (_reservations.Any(x => x.EquipmentSlot == slot))
             return;

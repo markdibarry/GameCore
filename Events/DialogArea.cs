@@ -48,19 +48,19 @@ public partial class DialogArea : Area2D, IContextArea
 
     public void OnBodyEntered(Node body)
     {
-        if (body is not AActorBody actor)
+        if (body is not BaseActorBody actor)
             return;
         actor.ContextAreas.Add(this);
     }
 
     public void OnBodyExited(Node body)
     {
-        if (body is not AActorBody actor)
+        if (body is not BaseActorBody actor)
             return;
         actor.ContextAreas.Remove(this);
     }
 
-    public void TriggerContext(AActorBody actor)
+    public void TriggerContext(BaseActorBody actor)
     {
         if (!IsActive
             || s_gameState.GUIActive

@@ -36,10 +36,10 @@ public abstract partial class Condition : Resource
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public LogicOp AdditionalLogicOp { get; set; }
     protected bool ConditionMet { get; set; }
-    protected virtual AStats Stats => (AStats)_statsInternal.Target!;
+    protected virtual BaseStats Stats => (BaseStats)_statsInternal.Target!;
     protected WeakReference? ConditionChangedCallback { get; set; }
 
-    public void SetStats(AStats stats)
+    public void SetStats(BaseStats stats)
     {
         _statsInternal = new(stats);
         AdditionalCondition?.SetStats(stats);

@@ -7,12 +7,12 @@ using Godot;
 
 namespace GameCore;
 
-public abstract partial class AGameSession : Node2D
+public abstract partial class BaseGameSession : Node2D
 {
     protected Node2D AreaSceneContainer { get; set; } = null!;
     protected AHUD HUD { get; set; } = null!;
     protected GUIController GUIController { get; set; } = null!;
-    public AAreaScene? CurrentAreaScene { get; private set; }
+    public BaseAreaScene? CurrentAreaScene { get; private set; }
     public TransitionLayer Transition { get; private set; } = null!;
     public bool Paused { get; private set; }
 
@@ -23,7 +23,7 @@ public abstract partial class AGameSession : Node2D
 
     public abstract void HandleInput(GUIInputHandler menuInput, double delta);
 
-    public virtual void AddAreaScene(AAreaScene areaScene)
+    public virtual void AddAreaScene(BaseAreaScene areaScene)
     {
         if (IsInstanceValid(CurrentAreaScene))
         {
@@ -76,7 +76,7 @@ public abstract partial class AGameSession : Node2D
         CurrentAreaScene = null;
     }
 
-    public void StartActionSequence(IEnumerable<AActor> actors)
+    public void StartActionSequence(IEnumerable<BaseActor> actors)
     {
         CurrentAreaScene?.StartActionSequence(actors);
     }

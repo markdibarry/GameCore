@@ -20,7 +20,7 @@ public static class Locator
     public static BaseAudioController Audio => s_gameRoot.AudioController;
     public static ILoaderFactory LoaderFactory => s_loaderFactory ?? s_nullLoaderFactory;
     public static BaseGameRoot Root => s_gameRoot;
-    public static AGameSession? Session => s_gameRoot?.GameSession;
+    public static BaseGameSession? Session => s_gameRoot?.GameSession;
     public static BaseTransitionController TransitionController => s_gameRoot.TransitionController;
 
     public static void SetInitialized() => s_initialized = true;

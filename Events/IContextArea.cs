@@ -4,5 +4,5 @@ namespace GameCore.Events;
 
 public interface IContextArea
 {
-    void TriggerContext(AActorBody actor);
+    void TriggerContext(BaseActorBody actor);
 }
