@@ -14,7 +14,7 @@ public partial class DialogOptionSubMenu : OptionSubMenu
     private PackedScene _textOptionScene = GD.Load<PackedScene>(TextOption.GetScenePath());
     private OptionContainer _options = null!;
 
-    protected override void SetupData(object? data)
+    protected override void OnPreSetup(object? data)
     {
         if (data is not IEnumerable<Choice> choices)
             return;
@@ -29,8 +29,9 @@ public partial class DialogOptionSubMenu : OptionSubMenu
         _ = CloseSubMenuAsync(data: data);
     }
 
-    protected override void CustomSetup()
+    protected override void OnSetup()
     {
+        SetNodeReferences();
         if (DialogChoices.Length == 0)
             return;
         List<TextOption> options = new();
@@ -46,7 +47,7 @@ public partial class DialogOptionSubMenu : OptionSubMenu
         _options.ReplaceChildren(options);
     }
 
-    protected override void SetNodeReferences()
+    private void SetNodeReferences()
     {
         _options = GetNode<OptionContainer>("%DialogOptions");
         AddContainer(_options);

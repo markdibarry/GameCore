@@ -18,7 +18,7 @@ public partial class OptionSubMenu : SubMenu
             return;
         if (menuInput.Accept.IsActionJustPressed)
         {
-            OnSelectPressedBase();
+            OnSelectPressedInternal();
             return;
         }
 

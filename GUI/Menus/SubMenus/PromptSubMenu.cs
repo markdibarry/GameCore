@@ -28,10 +28,11 @@ public partial class PromptSubMenu : SubMenu
 
     protected virtual void Confirm() { }
 
-    protected override void CustomSetup()
+    protected sealed override void OnSetupInternal()
     {
         if (_timeDuration > 0)
             _timerEnabled = true;
+        base.OnSetupInternal();
     }
 
     protected virtual void OnTimeOut()

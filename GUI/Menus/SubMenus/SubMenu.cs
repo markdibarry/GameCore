@@ -56,13 +56,13 @@ public partial class SubMenu : Control
     /// <summary>
     /// A method for logic pertaining to mocking data for debugging purposes
     /// </summary>
-    protected virtual void MockData() { }
+    protected virtual void OnMockPreSetup() { }
 
     /// <summary>
     /// Receives custom data from previous layer upon opening.
     /// </summary>
     /// <param name="data"></param>
-    protected virtual void SetupData(object? data) { }
+    protected virtual void OnPreSetup(object? data) { }
 
     /// <summary>
     /// Receives custom data from previous layer upon closing.
@@ -83,15 +83,15 @@ public partial class SubMenu : Control
         GUIController = guiController;
         Menu = menu;
         if (this.IsToolDebugMode())
-            MockData();
+            OnMockPreSetup();
         else
-            SetupData(data);
-        SetNodeReferencesBase();
-        CustomSetup();
+            OnPreSetup(data);
+        SetNodeReferencesInternal();
+        OnSetupInternal();
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         Modulate = TempColor;
         await AnimateOpenAsync();
-        PostWaitFrameSetupBase();
+        OnPostSetupInternal();
         CurrentState = State.Available;
     }
 
@@ -102,9 +102,10 @@ public partial class SubMenu : Control
         ProcessMode = ProcessModeEnum.Inherit;
         Dim = false;
         CurrentState = State.Available;
+        OnSubMenuResumed();
     }
 
-    public virtual void SuspendSubMenu()
+    public void SuspendSubMenu()
     {
         if (CurrentState != State.Available)
             return;
@@ -140,6 +141,8 @@ public partial class SubMenu : Control
 
     protected virtual void OnCloseSubMenu() { }
 
+    protected virtual void OnSubMenuResumed() { }
+
     protected virtual async Task OpenSubMenuAsync(string path, bool preventAnimation = false, object? data = null)
     {
         await Menu.OpenSubMenuAsync(path, preventAnimation, data);
@@ -150,23 +153,23 @@ public partial class SubMenu : Control
         await Menu.OpenSubMenuAsync(packedScene, preventAnimation, data);
     }
 
-    protected virtual void CustomSetup() { }
+    protected virtual void OnSetup() { }
+
+    protected virtual void OnSetupInternal() => OnSetup();
 
     /// <summary>
     /// Logic used for setup after the Controls have adjusted.
     /// </summary>
     /// <returns></returns>
-    protected virtual void PostWaitFrameSetup() { }
+    protected virtual void OnPostSetup() { }
 
     /// <summary>
     /// Logic used for setup after the Controls have adjusted base method.
     /// </summary>
     /// <returns></returns>
-    protected virtual void PostWaitFrameSetupBase() => PostWaitFrameSetup();
+    protected virtual void OnPostSetupInternal() => OnPostSetup();
 
-    protected virtual void SetNodeReferences() { }
-
-    protected virtual void SetNodeReferencesBase()
+    protected virtual void SetNodeReferencesInternal()
     {
         Foreground = GetNode<MarginContainer>("Foreground");
         Background = GetNode<Control>("Background");

@@ -19,7 +19,7 @@ public partial class OptionSubMenu : SubMenu
     protected string SelectedSoundPath { get; set; } = "menu_select1.wav";
     protected string FocusedSoundPath { get; set; } = "menu_bip1.wav";
 
-    public override async void ResumeSubMenu()
+    public sealed override async void ResumeSubMenu()
     {
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         if (CurrentContainer == null)
@@ -55,28 +55,44 @@ public partial class OptionSubMenu : SubMenu
         FocusContainer(optionContainer, index);
     }
 
-    protected virtual void OnFocusContainer(OptionContainer optionContainer) { }
+    /// <summary>
+    /// A callback for when a new container is focused
+    /// </summary>
+    /// <param name="optionContainer"></param>
+    protected virtual void OnContainerFocused(OptionContainer optionContainer) { }
 
-    protected virtual void OnFocusOOB(OptionContainer container, Direction direction) { }
+    /// <summary>
+    /// A callback for when an item was attempted to be focused out of bounds.
+    /// </summary>
+    /// <param name="container"></param>
+    /// <param name="direction"></param>
+    protected virtual void OnOOBFocused(OptionContainer container, Direction direction) { }
 
+    /// <summary>
+    /// A callback for when an item was focused.
+    /// </summary>
+    /// <param name="optionContainer"></param>
+    /// <param name="optionItem"></param>
     protected virtual void OnItemFocused(OptionContainer optionContainer, OptionItem? optionItem) { }
 
+    /// <summary>
+    /// A callback for when an item was selected.
+    /// </summary>
     protected virtual void OnSelectPressed() { }
 
-    protected sealed override void PostWaitFrameSetupBase()
+    protected sealed override void OnPostSetupInternal()
     {
         if (_optionContainers.Count == 0)
             return;
         FocusContainer(_optionContainers.First());
-        base.PostWaitFrameSetupBase();
+        base.OnPostSetupInternal();
     }
 
-    protected sealed override void SetNodeReferencesBase()
+    protected sealed override void SetNodeReferencesInternal()
     {
-        base.SetNodeReferencesBase();
+        base.SetNodeReferencesInternal();
         _cursorsContainer = Foreground.GetNode<Control>("Cursors");
         AddCursor();
-        SetNodeReferences();
     }
 
     protected void AddCursor()
@@ -93,9 +109,9 @@ public partial class OptionSubMenu : SubMenu
 
     protected void SubscribeToEvents(OptionContainer optionContainer)
     {
-        optionContainer.ItemFocused += OnItemFocusedBase;
+        optionContainer.ItemFocused += OnItemFocusedInternal;
         optionContainer.ItemSelectionChanged += OnItemSelectionChanged;
-        optionContainer.FocusOOB += OnFocusOOB;
+        optionContainer.FocusOOB += OnOOBFocused;
     }
 
     private void MoveCursorToItem(OptionItem optionItem)
@@ -103,7 +119,7 @@ public partial class OptionSubMenu : SubMenu
         _cursor.MoveToTarget(optionItem);
     }
 
-    private void OnItemFocusedBase(OptionContainer optionContainer, OptionItem? optionItem)
+    private void OnItemFocusedInternal(OptionContainer optionContainer, OptionItem? optionItem)
     {
         _cursor.Visible = optionItem != null;
         if (CurrentContainer != optionContainer || optionContainer.FocusedIndex != optionContainer.PreviousIndex)
@@ -133,7 +149,7 @@ public partial class OptionSubMenu : SubMenu
         cursor.MoveToTarget(optionItem);
     }
 
-    private void OnSelectPressedBase()
+    private void OnSelectPressedInternal()
     {
         if (CurrentContainer == null || !CurrentContainer.AllSelected &&
             (CurrentContainer.FocusedItem == null || CurrentContainer.FocusedItem.Disabled))
@@ -149,7 +165,7 @@ public partial class OptionSubMenu : SubMenu
     private void SetContainer(OptionContainer optionContainer)
     {
         CurrentContainer?.LeaveContainerFocus();
-        OnFocusContainer(optionContainer);
         CurrentContainer = optionContainer;
+        OnContainerFocused(optionContainer);
     }
 }
