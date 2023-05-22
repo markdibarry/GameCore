@@ -189,10 +189,7 @@ public partial class GridOptionContainer : OptionContainer
         SetNodeReferences();
         SubscribeEvents();
         foreach (OptionItem item in GridContainer.GetChildren<OptionItem>())
-        {
             OptionItems.Add(item);
-            item.DimWhenUnfocused = DimItems;
-        }
     }
 
     private void LeaveItemFocus(Direction direction)
@@ -213,7 +210,6 @@ public partial class GridOptionContainer : OptionContainer
             optionItem.MouseEnteredItem += OnMouseEnteredItem;
         }
 
-        optionItem.DimWhenUnfocused = DimItems;
         UpdateRows();
     }
 

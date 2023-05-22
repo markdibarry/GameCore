@@ -5,21 +5,10 @@ namespace GameCore.GUI;
 
 public partial class OptionItem : MarginContainer
 {
-    private bool _dimWhenUnfocused = true;
     private bool _disabled;
     private bool _focused;
-    private bool _selected;
+    private bool _pressed;
     public OptionCursor? SelectionCursor { get; set; }
-    [Export]
-    public bool DimWhenUnfocused
-    {
-        get => _dimWhenUnfocused;
-        set
-        {
-            _dimWhenUnfocused = value;
-            HandleStateChange();
-        }
-    }
     [Export]
     public bool Disabled
     {
@@ -27,7 +16,7 @@ public partial class OptionItem : MarginContainer
         set
         {
             _disabled = value;
-            HandleStateChange();
+            HandleDisplayStateChange();
         }
     }
     [Export]
@@ -37,44 +26,66 @@ public partial class OptionItem : MarginContainer
         set
         {
             _focused = value;
-            HandleStateChange();
+            HandleDisplayStateChange();
         }
     }
+    public bool IsHovered { get; set; }
     public object? OptionData { get; set; }
-    public bool Selected
+    public bool IsPressed
     {
-        get => _selected;
+        get => _pressed;
         set
         {
-            _selected = value;
-            HandleStateChange();
+            _pressed = value;
+            HandleDisplayStateChange();
         }
     }
+    public bool Toggleable { get; set; }
     public event Action<OptionItem>? MouseEnteredItem;
+    public event Action<OptionItem>? MouseExitedItem;
 
     public override void _Ready()
     {
-        HandleStateChange();
+        HandleDisplayStateChange();
         if (MouseFilter != MouseFilterEnum.Ignore)
+        {
             MouseEntered += OnMouseEntered;
+            MouseExited += OnMouseExited;
+        }
     }
 
-    protected virtual void HandleStateChange()
+    protected virtual void HandleDisplayStateChange()
     {
-        Color color;
         if (Disabled)
-            color = Colors.DisabledGrey;
-        else if (Selected || Focused || !DimWhenUnfocused)
-            color = Godot.Colors.White;
+            DisplayDisabled();
+        else if (IsPressed)
+            DisplayPressed();
+        else if (Focused)
+            DisplayFocused();
         else
-            color = Colors.DimGrey;
-        Modulate = color;
+            DisplayNormal();
     }
+
+    protected virtual void DisplayNormal() => Modulate = Colors.DimGrey;
+
+    protected virtual void DisplayFocused() => Modulate = Godot.Colors.White;
+
+    protected virtual void DisplayDisabled() => Modulate = Colors.DisabledGrey;
+
+    protected virtual void DisplayPressed() => DisplayFocused();
+
+    protected virtual void DisplayHovered() { }
 
     private void OnMouseEntered()
     {
-        if (Disabled || ProcessMode == ProcessModeEnum.Disabled)
+        if (ProcessMode == ProcessModeEnum.Disabled)
             return;
+        IsHovered = true;
         MouseEnteredItem?.Invoke(this);
+    }
+
+    private void OnMouseExited()
+    {
+        IsHovered = false;
     }
 }

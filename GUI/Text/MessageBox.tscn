@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://ciheicdycy60"]
 
-[ext_resource type="Script" path="res://GameCore/GUI/Text/MessageBox.cs" id="1"]
-[ext_resource type="StyleBox" path="res://Arenbee/GUI/Backgrounds/transparent.tres" id="2"]
+[ext_resource type="Script" path="res://GameCore/GUI/Text/MessageBox.cs" id="1_s863k"]
+[ext_resource type="StyleBox" path="res://Arenbee/GUI/Backgrounds/transparent.tres" id="2_4yop0"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_av8k5"]
 bg_color = Color(0, 0, 0, 0.45098)
@@ -22,9 +22,10 @@ anti_aliasing = false
 
 [node name="MessageBox" type="MarginContainer"]
 texture_filter = 1
-offset_right = 126.0
-offset_bottom = 17.0
-script = ExtResource("1")
+offset_right = 9.0
+offset_bottom = 15.0
+size_flags_horizontal = 0
+script = ExtResource("1_s863k")
 
 [node name="BackgroundMargin" type="MarginContainer" parent="."]
 layout_mode = 2
@@ -40,7 +41,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_av8k5")
 [node name="BackgroundPattern" type="Panel" parent="BackgroundMargin"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_styles/panel = ExtResource("2")
+theme_override_styles/panel = ExtResource("2_4yop0")
 
 [node name="Border" type="Panel" parent="."]
 layout_mode = 2

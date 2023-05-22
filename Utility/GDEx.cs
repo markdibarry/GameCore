@@ -37,13 +37,9 @@ public static class GDEx
         string godotRoot = Config.ProjectFullPath;
         if (!csPath.EndsWith(".cs"))
             throw new Exception($"Caller '{csPath}' is not a .cs file.");
-        if (!csPath.StartsWith(godotRoot))
+        if (!csPath.StartsWith(godotRoot, StringComparison.InvariantCultureIgnoreCase))
             throw new Exception($"Caller '{csPath}' cannot be found inside '{godotRoot}'.");
-
-        string resPath = csPath[godotRoot.Length..];
-        resPath = Path.ChangeExtension(resPath, ".tscn");
-        resPath = resPath.TrimStart('/', '\\').Replace("\\", "/");
-        return $"res://{resPath}";
+        return ProjectSettings.LocalizePath(Path.ChangeExtension(csPath, ".tscn"));
     }
 
     public static T Instantiate<T>(string path) where T : GodotObject
@@ -51,10 +47,7 @@ public static class GDEx
         return GD.Load<PackedScene>(path).Instantiate<T>();
     }
 
-    public static Godot.Collections.Array<T> ToGArray<[MustBeVariant] T>(this IEnumerable<T> source)
-    {
-        return new Godot.Collections.Array<T>(source);
-    }
+    public static Godot.Collections.Array<T> ToGArray<[MustBeVariant] T>(this IEnumerable<T> source) => new(source);
 
     /// <summary>
     /// Translates with a shortened id if in the editor context.<br/>

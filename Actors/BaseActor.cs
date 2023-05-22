@@ -33,7 +33,7 @@ public abstract class BaseActor : IDamageable
     public abstract BaseStats Stats { get; }
 
     public event Action<BaseActor>? Defeated;
-    public event Action<BaseActor, BaseDamageResult>? DamageReceived;
+    public event Action<BaseActor, IDamageResult>? DamageReceived;
     public event Action<BaseActor, Modifier, ModChangeType>? ModChanged;
     public event Action<BaseActor>? StatsChanged;
     public event Action<BaseActor, int, ModChangeType>? StatusEffectChanged;
@@ -78,7 +78,7 @@ public abstract class BaseActor : IDamageable
 
     private void OnStatsChanged() => StatsChanged?.Invoke(this);
 
-    private void OnDamageRecieved(BaseDamageResult damageResult)
+    private void OnDamageRecieved(IDamageResult damageResult)
     {
         damageResult.RecieverName = Name;
         DamageReceived?.Invoke(this, damageResult);

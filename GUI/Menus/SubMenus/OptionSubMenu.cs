@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using GameCore.Utility;
 using Godot;
@@ -19,13 +18,21 @@ public partial class OptionSubMenu : SubMenu
     protected string SelectedSoundPath { get; set; } = "menu_select1.wav";
     protected string FocusedSoundPath { get; set; } = "menu_bip1.wav";
 
-    public sealed override async void ResumeSubMenu()
+    public sealed override bool ResumeSubMenu()
     {
-        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        if (CurrentContainer == null)
-            throw new Exception("Current container is null!");
+        if (CurrentContainer == null || !base.ResumeSubMenu())
+            return false;
         FocusContainer(CurrentContainer);
-        base.ResumeSubMenu();
+        Foreground.Modulate = Godot.Colors.White;
+        return true;
+    }
+
+    public sealed override bool SuspendSubMenu()
+    {
+        if (Foreground == null || !base.SuspendSubMenu())
+            return false;
+        Foreground.Modulate = Godot.Colors.White.Darkened(0.3f);
+        return true;
     }
 
     protected void AddContainer(OptionContainer container)
@@ -133,7 +140,7 @@ public partial class OptionSubMenu : SubMenu
 
     private void OnItemSelectionChanged(OptionItem optionItem)
     {
-        if (!optionItem.Selected)
+        if (!optionItem.IsPressed)
         {
             optionItem.SelectionCursor?.DisableSelectionMode();
             return;

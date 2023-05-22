@@ -5,7 +5,7 @@ namespace GameCore.Statistics;
 
 public abstract partial class BaseHurtBox : AreaBox
 {
-    public event Action<BaseDamageRequest>? DamageRequested;
+    public event Action<IDamageRequest>? DamageRequested;
 
     public override void _Ready()
     {

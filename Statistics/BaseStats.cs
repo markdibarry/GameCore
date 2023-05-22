@@ -15,10 +15,10 @@ public abstract class BaseStats
         Modifiers = new();
         StatusEffects = new();
         StatLookup = new();
-        foreach (var stat in statLookup)
-            StatLookup[stat.StatType] = new Stat(stat);
-        foreach (var modifier in mods)
-            AddMod(new Modifier(modifier));
+        foreach (Stat stat in statLookup)
+            StatLookup[stat.StatType] = new(stat);
+        foreach (Modifier modifier in mods)
+            AddMod(new(modifier));
     }
 
     /// <summary>
@@ -28,22 +28,22 @@ public abstract class BaseStats
     protected BaseStats(BaseStats stats)
         : this(null!, Array.Empty<Stat>(), Array.Empty<Modifier>())
     {
-        foreach (var pair in stats.StatLookup)
+        foreach (KeyValuePair<int, Stat> pair in stats.StatLookup)
             StatLookup[pair.Key] = pair.Value;
-        foreach (var pair in stats.Modifiers)
+        foreach (KeyValuePair<int, List<Modifier>> pair in stats.Modifiers)
             Modifiers[pair.Key] = pair.Value.ToList();
     }
 
     [JsonIgnore]
-    public Queue<BaseDamageRequest> DamageToProcess { get; }
-    public BaseDamageResult? CurrentDamageResult { get; private set; }
+    public Queue<IDamageRequest> DamageToProcess { get; }
+    public IDamageResult? CurrentDamageResult { get; private set; }
     [JsonConverter(typeof(ModifierLookupConverter))]
     public Dictionary<int, List<Modifier>> Modifiers { get; }
     public Dictionary<int, Stat> StatLookup { get; }
     public IDamageable StatsOwner { get; }
     protected List<IStatusEffect> StatusEffects { get; }
     protected static IStatusEffectDB StatusEffectDB { get; } = StatsLocator.StatusEffectDB;
-    public event Action<BaseDamageResult>? DamageReceived;
+    public event Action<IDamageResult>? DamageReceived;
     public event Action<Modifier, ModChangeType>? ModChanged;
     public event Action<double>? Processed;
     public event Action? StatChanged;
@@ -111,7 +111,7 @@ public abstract class BaseStats
         return StatusEffects.Any(x => x.EffectType == statusEffectType);
     }
 
-    public void OnDamageReceived(BaseDamageRequest damageRequest) => ReceiveDamageRequest(damageRequest);
+    public void OnDamageReceived(IDamageRequest damageRequest) => ReceiveDamageRequest(damageRequest);
 
     public void Process(double delta, bool processEffects)
     {
@@ -120,7 +120,7 @@ public abstract class BaseStats
         CurrentDamageResult = DamageToProcess.Count > 0 ? HandleDamage(DamageToProcess.Dequeue()) : null;
     }
 
-    public void ReceiveDamageRequest(BaseDamageRequest damageRequest)
+    public void ReceiveDamageRequest(IDamageRequest damageRequest)
     {
         DamageToProcess.Enqueue(damageRequest);
     }
@@ -139,7 +139,7 @@ public abstract class BaseStats
         RaiseModChanged(mod, ModChangeType.Remove);
     }
 
-    protected abstract BaseDamageResult HandleDamage(BaseDamageRequest damageData);
+    protected abstract IDamageResult HandleDamage(IDamageRequest damageData);
 
     protected void OnActivationConditionMet(Modifier mod)
     {
@@ -154,7 +154,7 @@ public abstract class BaseStats
 
     protected void RaiseModChanged(Modifier mod, ModChangeType modChange) => ModChanged?.Invoke(mod, modChange);
 
-    protected void RaiseDamageReceived(BaseDamageResult damageResult) => DamageReceived?.Invoke(damageResult);
+    protected void RaiseDamageReceived(IDamageResult damageResult) => DamageReceived?.Invoke(damageResult);
 
     protected void RaiseStatChanged() => StatChanged?.Invoke();
 

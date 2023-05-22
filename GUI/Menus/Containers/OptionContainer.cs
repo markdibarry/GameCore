@@ -42,7 +42,7 @@ public abstract partial class OptionContainer : MarginContainer
     public void FocusItem(OptionItem item)
     {
         int index = OptionItems.IndexOf(item);
-        if (item.Disabled || index == -1)
+        if (index == -1)
             return;
         FocusItem(index);
     }
@@ -79,7 +79,7 @@ public abstract partial class OptionContainer : MarginContainer
         ItemFocused?.Invoke(this, FocusedItem);
     }
 
-    public IEnumerable<OptionItem> GetSelectedItems() => OptionItems.Where(x => x.Selected);
+    public IEnumerable<OptionItem> GetSelectedItems() => OptionItems.Where((Func<OptionItem, bool>)(x => (bool)x.IsPressed));
 
     public void LeaveContainerFocus()
     {
@@ -106,7 +106,7 @@ public abstract partial class OptionContainer : MarginContainer
 
     private void SetItemSelection(OptionItem item, bool selected)
     {
-        item.Selected = selected;
+        item.IsPressed = selected;
         ItemSelectionChanged?.Invoke(item);
     }
 

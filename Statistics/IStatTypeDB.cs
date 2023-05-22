@@ -3,10 +3,10 @@ using Gictionary = Godot.Collections.Dictionary;
 
 namespace GameCore.Statistics;
 
-public abstract class BaseStatTypeDB
+public interface IStatTypeDB
 {
-    public abstract string[] GetTypeNames();
-    public abstract string[]? GetValueEnumOptions(int statType);
+    string[] GetTypeNames();
+    string[]? GetValueEnumOptions(int statType);
 
     /// <summary>
     /// Gets display properties for editor

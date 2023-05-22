@@ -11,20 +11,6 @@ namespace GameCore.GUI;
 public partial class SubMenu : Control
 {
     protected static BaseAudioController Audio { get; } = Locator.Audio;
-    private bool _dim;
-
-    [Export]
-    public bool Dim
-    {
-        get => _dim;
-        set
-        {
-            if (Foreground == null)
-                return;
-            Foreground.Modulate = value ? Godot.Colors.White.Darkened(0.3f) : Godot.Colors.White;
-            _dim = value;
-        }
-    }
     public State CurrentState { get; protected set; }
     protected Control Background { get; private set; } = null!;
     protected MarginContainer Foreground { get; private set; } = null!;
@@ -95,23 +81,23 @@ public partial class SubMenu : Control
         CurrentState = State.Available;
     }
 
-    public virtual void ResumeSubMenu()
+    public virtual bool ResumeSubMenu()
     {
         if (CurrentState != State.Suspended)
-            return;
+            return false;
         ProcessMode = ProcessModeEnum.Inherit;
-        Dim = false;
         CurrentState = State.Available;
         OnSubMenuResumed();
+        return true;
     }
 
-    public void SuspendSubMenu()
+    public virtual bool SuspendSubMenu()
     {
         if (CurrentState != State.Available)
-            return;
-        Dim = true;
+            return false;
         ProcessMode = ProcessModeEnum.Disabled;
         CurrentState = State.Suspended;
+        return true;
     }
 
     public async Task TransitionCloseAsync(bool preventAnimation = false)

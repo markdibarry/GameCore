@@ -6,14 +6,14 @@ public static class StatsLocator
 {
     private static IConditionTypeDB? s_conditionTypeDB;
     private static readonly NullConditionTypeDB s_nullConditionTypeDB = new();
-    private static BaseStatTypeDB? s_statTypeDB;
+    private static IStatTypeDB? s_statTypeDB;
     private static readonly NullStatTypeDB s_nullStatTypDB = new();
     private static IStatusEffectDB? s_statusEffectDB;
     private static readonly NullStatusEffectDB s_nullStatusEffectDB = new();
     private static IStatusEffectModifierFactory? s_statusEffectModifierFactory;
     private static readonly NullStatusEffectModifierFactory s_nullStatusEffectModifierFactory = new();
     public static IConditionTypeDB ConditionTypeDB => s_conditionTypeDB ?? s_nullConditionTypeDB;
-    public static BaseStatTypeDB StatTypeDB => s_statTypeDB ?? s_nullStatTypDB;
+    public static IStatTypeDB StatTypeDB => s_statTypeDB ?? s_nullStatTypDB;
     public static IStatusEffectDB StatusEffectDB => s_statusEffectDB ?? s_nullStatusEffectDB;
     public static IStatusEffectModifierFactory StatusEffectModifierFactory => s_statusEffectModifierFactory ?? s_nullStatusEffectModifierFactory;
 
@@ -22,7 +22,7 @@ public static class StatsLocator
         s_conditionTypeDB = conditionLookup;
     }
 
-    public static void ProvideStatTypeDB(BaseStatTypeDB statTypeDB) => s_statTypeDB = statTypeDB;
+    public static void ProvideStatTypeDB(IStatTypeDB statTypeDB) => s_statTypeDB = statTypeDB;
 
     public static void ProvideStatusEffectDB(IStatusEffectDB statusEffectDB) => s_statusEffectDB = statusEffectDB;
 
@@ -36,10 +36,10 @@ public static class StatsLocator
         public StatusEffectData? GetEffectData(int type) => null;
     }
 
-    private class NullStatTypeDB : BaseStatTypeDB
+    private class NullStatTypeDB : IStatTypeDB
     {
-        public override string[] GetTypeNames() => Array.Empty<string>();
-        public override string[]? GetValueEnumOptions(int statType) => Array.Empty<string>();
+        public string[] GetTypeNames() => Array.Empty<string>();
+        public string[]? GetValueEnumOptions(int statType) => Array.Empty<string>();
     }
 
     private class NullConditionTypeDB : IConditionTypeDB

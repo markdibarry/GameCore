@@ -10,11 +10,6 @@ public abstract class BaseItem : IEquatable<BaseItem>
     {
         Id = id;
         ItemCategory = itemCategory;
-        MaxStack = 1;
-        IsDroppable = false;
-        IsSellable = false;
-        IsReusable = false;
-        UseData = new ItemUseData();
     }
 
     public string Id { get; init; } = string.Empty;
@@ -25,10 +20,10 @@ public abstract class BaseItem : IEquatable<BaseItem>
     public bool IsReusable { get; init; }
     public bool IsSellable { get; init; }
     public ItemCategory ItemCategory { get; }
-    public int MaxStack { get; init; }
+    public int MaxStack { get; init; } = 1;
     public ICollection<Modifier> Modifiers { get; set; } = Array.Empty<Modifier>();
     public int Price { get; init; }
-    public ItemUseData UseData { get; init; }
+    public ItemUseData UseData { get; init; } = new();
 
     public bool Equals(BaseItem? other)
     {
