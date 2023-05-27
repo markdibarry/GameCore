@@ -80,7 +80,7 @@ public partial class DialogBox : Control
 
     public override void _Ready() => Init();
 
-    public void HandleInput(GUIInputHandler menuInput, double delta)
+    public void HandleInput(IGUIInputHandler menuInput, double delta)
     {
         SpeedUpEnabled = false;
         if (CurrentState == State.Idle && menuInput.Accept.IsActionJustPressed)

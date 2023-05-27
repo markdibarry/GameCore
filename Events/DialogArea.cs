@@ -11,7 +11,7 @@ public partial class DialogArea : Area2D, IContextArea
     public static string GetScenePath() => GDEx.GetScenePath();
     private static readonly GUIController s_guiController = Locator.Root.GUIController;
     private static readonly GameState s_gameState = Locator.Root.GameState;
-    private static readonly GUIInputHandler s_menuInput = Locator.Root.MenuInput;
+    private static readonly IGUIInputHandler s_menuInput = Locator.Root.MenuInput;
     private ColorRect _colorRect = null!;
     private string _dialogPath = string.Empty;
 

@@ -21,7 +21,7 @@ public abstract partial class BaseGameRoot : Node
 
     public string GameSessionScenePath { get; }
     public string TitleMenuScenePath { get; }
-    public BaseAudioController AudioController { get; protected set; } = null!;
+    public IAudioService AudioController { get; protected set; } = null!;
     public GameCamera GameCamera { get; protected set; } = null!;
     public Node2D GameDisplay { get; set; } = null!;
     public Node2D GameSessionContainer { get; set; } = null!;
@@ -29,8 +29,8 @@ public abstract partial class BaseGameRoot : Node
     public TransitionLayer Transition { get; protected set; } = null!;
     public BaseGameSession? GameSession { get; private set; }
     public GameState GameState { get; } = new();
-    public abstract GUIInputHandler MenuInput { get; }
-    public abstract InputHandler PlayerOneInput { get; }
+    public abstract IGUIInputHandler MenuInput { get; }
+    public abstract IInputHandler PlayerOneInput { get; }
     public BaseTransitionController TransitionController { get; }
 
     public override void _Ready()
@@ -44,7 +44,7 @@ public abstract partial class BaseGameRoot : Node
     {
         GameDisplay = GetNode<Node2D>("GameDisplay");
         GUIController = GameDisplay.GetNode<GUIController>("GUIController");
-        AudioController = GameDisplay.GetNode<BaseAudioController>("AudioController");
+        AudioController = GameDisplay.GetNode<IAudioService>("AudioController");
         GameSessionContainer = GameDisplay.GetNode<Node2D>("GameSessionContainer");
         Transition = GameDisplay.GetNode<TransitionLayer>("Transition");
         GameCamera = GameDisplay.GetNode<GameCamera>("GameCamera");

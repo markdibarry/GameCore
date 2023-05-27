@@ -33,7 +33,7 @@ public abstract partial class BaseActorBody : CharacterBody2D
         MaxSpeed = WalkSpeed;
     }
 
-    protected static BaseAudioController Audio { get; } = Locator.Audio;
+    protected static IAudioService Audio { get; } = Locator.Audio;
     private BaseActor? _actorInternal;
     public virtual BaseActor? Actor => _actorInternal;
     public int Role { get; protected set; }

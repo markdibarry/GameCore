@@ -7,21 +7,15 @@ namespace GameCore.GUI;
 [Tool]
 public partial class GridOptionContainer : OptionContainer
 {
-    public GridOptionContainer()
-    {
-        SingleOptionsEnabled = true;
-        FocusWrap = true;
-    }
-
     private bool _singleRow;
     [ExportGroup("Selecting")]
     [Export] public bool DimItems { get; set; }
-    [Export] public bool FocusWrap { get; set; }
+    [Export] public bool FocusWrap { get; set; } = true;
     [ExportGroup("Sizing")]
     [Export(PropertyHint.Range, "1,20")]
     public int Columns
     {
-        get => GridContainer.Columns;
+        get => GridContainer?.Columns ?? 1;
         set
         {
             if (GridContainer != null)
@@ -79,6 +73,30 @@ public partial class GridOptionContainer : OptionContainer
         GridContainer.Position = Vector2.Zero;
     }
 
+    protected virtual void OnChildAdded(Node node)
+    {
+        if (node is not OptionItem optionItem)
+            return;
+        OptionItems.Add(optionItem);
+
+        if (MouseEnabled)
+        {
+            optionItem.MouseFilter = MouseFilterEnum.Stop;
+            optionItem.MouseEnteredItem += OnMouseEnteredItem;
+        }
+
+        UpdateRows();
+    }
+
+    protected virtual void OnChildExiting(Node node)
+    {
+        if (node is not OptionItem optionItem)
+            return;
+        OptionItems.Remove(optionItem);
+        optionItem.SelectionCursor?.QueueFree();
+        UpdateRows();
+    }
+
     private void FocusUp()
     {
         int currentIndex = FocusedIndex == AllSelectedIndex ? PreviousIndex : FocusedIndex;
@@ -121,7 +139,7 @@ public partial class GridOptionContainer : OptionContainer
 
     private void FocusTopEnd()
     {
-        if (AllOptionEnabled && !IsSingleRow && FocusedIndex != AllSelectedIndex)
+        if (CurrentOptionMode.HasFlag(OptionMode.All) && !IsSingleRow && FocusedIndex != AllSelectedIndex)
         {
             FocusItem(AllSelectedIndex);
             return;
@@ -135,7 +153,7 @@ public partial class GridOptionContainer : OptionContainer
 
     private void FocusBottomEnd()
     {
-        if (AllOptionEnabled && !IsSingleRow && FocusedIndex != AllSelectedIndex)
+        if (CurrentOptionMode.HasFlag(OptionMode.All) && !IsSingleRow && FocusedIndex != AllSelectedIndex)
         {
             FocusItem(AllSelectedIndex);
             return;
@@ -154,7 +172,7 @@ public partial class GridOptionContainer : OptionContainer
     {
         if (IsSingleRow)
         {
-            if (AllOptionEnabled && FocusedIndex != AllSelectedIndex)
+            if (CurrentOptionMode.HasFlag(OptionMode.All) && FocusedIndex != AllSelectedIndex)
                 FocusItem(AllSelectedIndex);
             else
                 FocusItem(0);
@@ -171,7 +189,7 @@ public partial class GridOptionContainer : OptionContainer
     {
         if (IsSingleRow)
         {
-            if (AllOptionEnabled && FocusedIndex != AllSelectedIndex)
+            if (CurrentOptionMode.HasFlag(OptionMode.All) && FocusedIndex != AllSelectedIndex)
                 FocusItem(AllSelectedIndex);
             else
                 FocusItem(OptionItems.Count - 1);
@@ -197,29 +215,6 @@ public partial class GridOptionContainer : OptionContainer
         if (FocusWrap)
             WrapFocus(direction);
         RaiseFocusOOB(direction);
-    }
-
-    private void OnChildAdded(Node node)
-    {
-        if (node is not OptionItem optionItem)
-            return;
-        OptionItems.Add(optionItem);
-        if (MouseEnabled)
-        {
-            optionItem.MouseFilter = MouseFilterEnum.Stop;
-            optionItem.MouseEnteredItem += OnMouseEnteredItem;
-        }
-
-        UpdateRows();
-    }
-
-    private void OnChildExiting(Node node)
-    {
-        if (node is not OptionItem optionItem)
-            return;
-        OptionItems.Remove(optionItem);
-        optionItem.SelectionCursor?.QueueFree();
-        UpdateRows();
     }
 
     private void OnMouseEnteredItem(OptionItem optionItem)

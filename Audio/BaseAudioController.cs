@@ -3,7 +3,7 @@ using Godot;
 
 namespace GameCore.Audio;
 
-public partial class BaseAudioController : Node2D
+public partial class BaseAudioController : Node2D, IAudioService
 {
     public BaseAudioController()
     {

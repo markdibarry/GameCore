@@ -10,7 +10,7 @@ namespace GameCore.GUI;
 [Tool]
 public partial class SubMenu : Control
 {
-    protected static BaseAudioController Audio { get; } = Locator.Audio;
+    protected static IAudioService Audio { get; } = Locator.Audio;
     public State CurrentState { get; protected set; }
     protected Control Background { get; private set; } = null!;
     protected MarginContainer Foreground { get; private set; } = null!;
@@ -19,7 +19,8 @@ public partial class SubMenu : Control
     protected Color TempColor { get; set; }
     protected IGUIController GUIController { get; private set; } = null!;
     protected IMenu Menu { get; private set; } = null!;
-    protected string CloseSoundPath { get; set; } = "menu_close1.wav";
+    protected string CloseSoundPath { get; set; } = Config.GUICloseSoundPath;
+    protected string OpenSubMenuSoundPath { get; set; } = Config.GUIOpenSoundPath;
 
     public enum State
     {
@@ -56,7 +57,7 @@ public partial class SubMenu : Control
     /// <param name="data"></param>
     public virtual void UpdateData(object? data) { }
 
-    public virtual void HandleInput(GUIInputHandler menuInput, double delta)
+    public virtual void HandleInput(IGUIInputHandler menuInput, double delta)
     {
         if (menuInput.Cancel.IsActionJustPressed && !PreventCancel)
             _ = CloseSubMenuAsync();
@@ -81,13 +82,14 @@ public partial class SubMenu : Control
         CurrentState = State.Available;
     }
 
-    public virtual bool ResumeSubMenu()
+    public virtual async Task<bool> ResumeSubMenu()
     {
         if (CurrentState != State.Suspended)
             return false;
         ProcessMode = ProcessModeEnum.Inherit;
         CurrentState = State.Available;
         OnSubMenuResumed();
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         return true;
     }
 
@@ -121,7 +123,6 @@ public partial class SubMenu : Control
 
     protected virtual async Task CloseSubMenuAsync(Type? cascadeTo = null, bool preventAnimation = false, object? data = null)
     {
-        //Audio.PlaySoundFX(CloseSoundPath);
         await Menu.CloseSubMenuAsync(cascadeTo, preventAnimation, data);
     }
 

@@ -2,8 +2,9 @@
 using Godot;
 
 namespace GameCore.GUI;
+
 [Tool]
-public partial class KeyValueOption : OptionItem
+public partial class KeyValueOption : TableRowOption
 {
     public static string GetScenePath() => GDEx.GetScenePath();
     private string _keyText = string.Empty;

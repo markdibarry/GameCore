@@ -1,13 +1,23 @@
-﻿using Godot;
+﻿using System.Collections.Generic;
+using Godot;
 
 namespace GameCore.Input;
 
-public abstract class InputHandler
+public abstract class InputHandler : IInputHandler
 {
-    public abstract InputAction Up { get; }
-    public abstract InputAction Down { get; }
-    public abstract InputAction Left { get; }
-    public abstract InputAction Right { get; }
+    protected InputHandler(string up, string down, string left, string right)
+    {
+        Up = new InputAction(this, up);
+        Down = new InputAction(this, down);
+        Left = new InputAction(this, left);
+        Right = new InputAction(this, right);
+    }
+
+    private readonly HashSet<IInputAction> _pendingActionsToClear = new();
+    public IInputAction Up { get; }
+    public IInputAction Down { get; }
+    public IInputAction Left { get; }
+    public IInputAction Right { get; }
     public bool UserInputDisabled { get; set; }
 
     public Vector2 GetLeftAxis()
@@ -26,11 +36,12 @@ public abstract class InputHandler
         Left.ActionStrength = Mathf.Min(newVector.X, 0) * -1;
     }
 
-    public virtual void Update()
+    public void Update()
     {
-        Up.ClearOneTimeActions();
-        Down.ClearOneTimeActions();
-        Left.ClearOneTimeActions();
-        Right.ClearOneTimeActions();
+        foreach (IInputAction action in _pendingActionsToClear)
+            action.ClearOneTimeActions();
+        _pendingActionsToClear.RemoveWhere(x => x.ShouldClear);
     }
+
+    public void AddActionToClear(IInputAction action) => _pendingActionsToClear.Add(action);
 }

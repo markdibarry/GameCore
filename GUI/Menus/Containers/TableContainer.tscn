@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://diyskp85elr1j"]
+
+[ext_resource type="PackedScene" uid="uid://bo1ntvx40yyl1" path="res://GameCore/GUI/Menus/Containers/GridOptionContainer.tscn" id="1_eohp6"]
+[ext_resource type="Script" path="res://GameCore/GUI/Menus/Containers/TableContainer.cs" id="2_b11g7"]
+
+[node name="TableContainer" instance=ExtResource("1_eohp6")]
+script = ExtResource("2_b11g7")

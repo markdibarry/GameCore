@@ -1,16 +1,23 @@
 ﻿namespace GameCore.Input;
 
-public abstract class GUIInputHandler : InputHandler
+public class GUIInputHandler : InputHandler, IGUIInputHandler
 {
-    public abstract InputAction Accept { get; }
-    public abstract InputAction Cancel { get; }
-    public abstract InputAction Start { get; }
-
-    public override void Update()
+    public GUIInputHandler(
+        string up,
+        string down,
+        string left,
+        string right,
+        string accept,
+        string cancel,
+        string start)
+            : base(up, down, left, right)
     {
-        base.Update();
-        Accept.ClearOneTimeActions();
-        Cancel.ClearOneTimeActions();
-        Start.ClearOneTimeActions();
+        Accept = new InputAction(this, accept);
+        Cancel = new InputAction(this, cancel);
+        Start = new InputAction(this, start);
     }
+
+    public IInputAction Accept { get; }
+    public IInputAction Cancel { get; }
+    public IInputAction Start { get; }
 }

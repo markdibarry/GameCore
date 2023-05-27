@@ -28,7 +28,7 @@ public partial class GUIController : CanvasLayer, IGUIController
     /// </summary>
     /// <param name="menuInput"></param>
     /// <param name="delta"></param>
-    public void HandleInput(GUIInputHandler menuInput, double delta)
+    public void HandleInput(IGUIInputHandler menuInput, double delta)
     {
         CurrentLayer?.HandleInput(menuInput, delta);
     }

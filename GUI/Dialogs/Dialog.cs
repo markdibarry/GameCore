@@ -34,7 +34,7 @@ public partial class Dialog : GUILayer
     public bool SpeechBubbleEnabled { get; set; }
     public bool DualBoxEnabled { get; set; } = true;
 
-    public override void HandleInput(GUIInputHandler menuInput, double delta)
+    public override void HandleInput(IGUIInputHandler menuInput, double delta)
     {
         if (CurrentState != State.Available || FocusedBox == null)
             return;

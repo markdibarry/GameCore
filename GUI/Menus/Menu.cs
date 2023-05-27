@@ -37,7 +37,7 @@ public partial class Menu : GUILayer, IMenu
             await GUIController.CloseLayerAsync(preventAnimation, data);
             return;
         }
-        CurrentSubMenu.ResumeSubMenu();
+        await CurrentSubMenu.ResumeSubMenu();
         if (cascadeTo != null && cascadeTo != CurrentSubMenu.GetType())
             await CloseSubMenuAsync(cascadeTo, preventAnimation, data);
         else
@@ -52,7 +52,7 @@ public partial class Menu : GUILayer, IMenu
         CurrentState = State.Closed;
     }
 
-    public override void HandleInput(GUIInputHandler menuInput, double delta)
+    public override void HandleInput(IGUIInputHandler menuInput, double delta)
     {
         if (CurrentState != State.Available || CurrentSubMenu?.CurrentState != SubMenu.State.Available)
             return;

@@ -10,7 +10,7 @@ public partial class PromptSubMenu : SubMenu
     private double _timeDuration;
     private bool _timerEnabled;
 
-    public override void HandleInput(GUIInputHandler menuInput, double delta)
+    public override void HandleInput(IGUIInputHandler menuInput, double delta)
     {
         base.HandleInput(menuInput, delta);
 

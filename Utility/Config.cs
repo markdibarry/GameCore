@@ -21,6 +21,9 @@ public static class Config
         DialogPath = settings.GetOrEmpty(nameof(DialogPath));
         AudioPath = settings.GetOrEmpty(nameof(AudioPath));
         ItemPath = settings.GetOrEmpty(nameof(ItemPath));
+        GUICloseSoundPath = settings.GetOrEmpty(nameof(GUICloseSoundPath));
+        GUIOpenSoundPath = settings.GetOrEmpty(nameof(GUIOpenSoundPath));
+        GUIFocusSoundPath = settings.GetOrEmpty(nameof(GUIFocusSoundPath));
     }
 
     public static string ProjectName { get; }
@@ -37,6 +40,9 @@ public static class Config
     public static string AudioFullPath => $"{ProjectPath}{AudioPath}";
     public static string ItemPath { get; }
     public static string ItemFullPath => $"{ProjectPath}{ItemPath}";
+    public static string GUICloseSoundPath { get; }
+    public static string GUIOpenSoundPath { get; }
+    public static string GUIFocusSoundPath { get; }
 
     private static string GetOrEmpty(this Dictionary<string, string> dict, string key)
     {

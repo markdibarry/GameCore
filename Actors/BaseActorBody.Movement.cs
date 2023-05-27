@@ -6,7 +6,7 @@ namespace GameCore.Actors;
 
 public partial class BaseActorBody
 {
-    private InputHandler _inputHandlerInternal = null!;
+    private IInputHandler _inputHandlerInternal = null!;
     private Vector2 _floatPosition;
     private Vector2 _move;
 
@@ -30,7 +30,7 @@ public partial class BaseActorBody
     public bool IsFloater { get; protected set; }
     public int IsRunStuck { get; set; }
     public int RunSpeed => (int)(WalkSpeed * 1.5);
-    public virtual InputHandler InputHandler => _inputHandlerInternal;
+    public virtual IInputHandler InputHandler => _inputHandlerInternal;
 
     public void ChangeDirectionX()
     {
@@ -45,7 +45,7 @@ public partial class BaseActorBody
         _move = IsFloater ? InputHandler.GetLeftAxis() : Direction;
     }
 
-    public void SetInputHandler(InputHandler inputHandler) => _inputHandlerInternal = inputHandler;
+    public void SetInputHandler(IInputHandler inputHandler) => _inputHandlerInternal = inputHandler;
 
     public void UpdateDirection()
     {

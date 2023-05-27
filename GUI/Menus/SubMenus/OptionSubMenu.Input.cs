@@ -10,7 +10,7 @@ public partial class OptionSubMenu : SubMenu
     private readonly double _rapidScrollDelay = 0.4;
     private readonly double _rapidScrollInterval = 0.05;
 
-    public override void HandleInput(GUIInputHandler menuInput, double delta)
+    public override void HandleInput(IGUIInputHandler menuInput, double delta)
     {
         base.HandleInput(menuInput, delta);
 
@@ -21,11 +21,21 @@ public partial class OptionSubMenu : SubMenu
             OnSelectPressedInternal();
             return;
         }
+        //else if (menuInput.Cancel.IsActionJustPressed && !PreventCancel)
+        //{
+        //    _ = CloseSubMenuAsync();
+        //    return;
+        //}
+        //else if (menuInput.Start.IsActionJustPressed && !PreventCloseAll)
+        //{
+        //    _ = CloseMenuAsync();
+        //    return;
+        //}
 
         HandleRapidScroll(delta, GetDirection(menuInput));
     }
 
-    protected static Direction GetDirection(GUIInputHandler menuInput)
+    protected static Direction GetDirection(IInputHandler menuInput)
     {
         Direction newDirection = Direction.None;
 

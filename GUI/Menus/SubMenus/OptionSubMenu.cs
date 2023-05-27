@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using GameCore.Utility;
 using Godot;
 
@@ -15,12 +16,11 @@ public partial class OptionSubMenu : SubMenu
 
     public OptionContainer? CurrentContainer { get; private set; }
     public IReadOnlyCollection<OptionContainer> OptionContainers => _optionContainers;
-    protected string SelectedSoundPath { get; set; } = "menu_select1.wav";
-    protected string FocusedSoundPath { get; set; } = "menu_bip1.wav";
+    protected string FocusedSoundPath { get; set; } = Config.GUIFocusSoundPath;
 
-    public sealed override bool ResumeSubMenu()
+    public sealed override async Task<bool> ResumeSubMenu()
     {
-        if (CurrentContainer == null || !base.ResumeSubMenu())
+        if (CurrentContainer == null || !await base.ResumeSubMenu())
             return false;
         FocusContainer(CurrentContainer);
         Foreground.Modulate = Godot.Colors.White;
@@ -129,7 +129,8 @@ public partial class OptionSubMenu : SubMenu
     private void OnItemFocusedInternal(OptionContainer optionContainer, OptionItem? optionItem)
     {
         _cursor.Visible = optionItem != null;
-        if (CurrentContainer != optionContainer || optionContainer.FocusedIndex != optionContainer.PreviousIndex)
+        if (CurrentContainer != null
+            && (optionContainer != CurrentContainer || optionContainer.FocusedIndex != optionContainer.PreviousIndex))
             Audio.PlaySoundFX(FocusedSoundPath);
         if (CurrentContainer != optionContainer)
             SetContainer(optionContainer);
@@ -158,14 +159,14 @@ public partial class OptionSubMenu : SubMenu
 
     private void OnSelectPressedInternal()
     {
-        if (CurrentContainer == null || !CurrentContainer.AllSelected &&
-            (CurrentContainer.FocusedItem == null || CurrentContainer.FocusedItem.Disabled))
-        {
-            Audio.PlaySoundFX(FocusedSoundPath);
-            return;
-        }
+        //if (CurrentContainer == null || !CurrentContainer.AllSelected &&
+        //    (CurrentContainer.FocusedItem == null || CurrentContainer.FocusedItem.Disabled))
+        //{
+        //    Audio.PlaySoundFX(FocusedSoundPath);
+        //    return;
+        //}
 
-        Audio.PlaySoundFX(SelectedSoundPath);
+        //Audio.PlaySoundFX(SelectedSoundPath);
         OnSelectPressed();
     }
 

@@ -10,8 +10,7 @@ public abstract partial class OptionContainer : MarginContainer
 {
     public const int AllSelectedIndex = -1;
     public bool AllSelected => FocusedIndex == AllSelectedIndex;
-    public bool AllOptionEnabled { get; set; }
-    public bool SingleOptionsEnabled { get; set; }
+    public OptionMode CurrentOptionMode { get; set; } = OptionMode.Single;
     public int PreviousIndex { get; protected set; }
     public int FocusedIndex { get; protected set; }
     public OptionItem? FocusedItem => OptionItems.ElementAtOrDefault(FocusedIndex);
@@ -28,11 +27,11 @@ public abstract partial class OptionContainer : MarginContainer
     /// <param name="index"></param>
     public virtual void FocusContainer(int index)
     {
-        if (SingleOptionsEnabled)
+        if (CurrentOptionMode.HasFlag(OptionMode.Single))
         {
             FocusItem(index);
         }
-        else if (AllOptionEnabled)
+        else if (CurrentOptionMode == OptionMode.All)
         {
             FocusedIndex = AllSelectedIndex;
             FocusItem(AllSelectedIndex);
@@ -60,12 +59,10 @@ public abstract partial class OptionContainer : MarginContainer
     /// <param name="index"></param>
     public void FocusItem(int index)
     {
-        if (!SingleOptionsEnabled)
-        {
-            if (!AllOptionEnabled)
-                return;
+        if (CurrentOptionMode == OptionMode.None)
+            return;
+        if (CurrentOptionMode.HasFlag(OptionMode.All))
             index = AllSelectedIndex;
-        }
         if (PreviousIndex != FocusedIndex)
             PreviousIndex = FocusedIndex;
         if (OptionItems.Count == 0)
@@ -74,12 +71,13 @@ public abstract partial class OptionContainer : MarginContainer
             FocusedItem.Focused = false;
         FocusedIndex = GetValidIndex(index);
         HandleSelectAll();
+        //FocusedItem?.GrabFocus();
         if (FocusedItem != null)
             FocusedItem.Focused = true;
         ItemFocused?.Invoke(this, FocusedItem);
     }
 
-    public IEnumerable<OptionItem> GetSelectedItems() => OptionItems.Where((Func<OptionItem, bool>)(x => (bool)x.IsPressed));
+    public IEnumerable<OptionItem> GetSelectedItems() => OptionItems.Where(x => x.IsPressed);
 
     public void LeaveContainerFocus()
     {
@@ -98,7 +96,7 @@ public abstract partial class OptionContainer : MarginContainer
 
     protected int GetValidIndex(int index)
     {
-        int lowest = AllOptionEnabled ? AllSelectedIndex : 0;
+        int lowest = CurrentOptionMode.HasFlag(OptionMode.All) ? AllSelectedIndex : 0;
         return Math.Clamp(index, lowest, OptionItems.Count - 1);
     }
 
@@ -112,7 +110,7 @@ public abstract partial class OptionContainer : MarginContainer
 
     private void HandleSelectAll()
     {
-        if (!AllOptionEnabled)
+        if (!CurrentOptionMode.HasFlag(OptionMode.All))
             return;
         if (AllSelected)
         {

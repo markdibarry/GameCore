@@ -21,7 +21,7 @@ public abstract partial class BaseGameSession : Node2D
         SetNodeReferences();
     }
 
-    public abstract void HandleInput(GUIInputHandler menuInput, double delta);
+    public abstract void HandleInput(IGUIInputHandler menuInput, double delta);
 
     public virtual void AddAreaScene(BaseAreaScene areaScene)
     {

@@ -14,7 +14,7 @@ public abstract partial class GUILayer : Control
     /// </summary>
     /// <param name="menuInput"></param>
     /// <param name="delta"></param>
-    public abstract void HandleInput(GUIInputHandler menuInput, double delta);
+    public abstract void HandleInput(IGUIInputHandler menuInput, double delta);
     /// <summary>
     /// Handles logic needed to gracefully close layer.
     /// </summary>
