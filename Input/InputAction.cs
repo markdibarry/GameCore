@@ -23,7 +23,7 @@ public class InputAction : IInputAction
                 return SimulatedStrength;
             if (IsActionPressed)
                 return 1;
-            if (InputHandler.UserInputDisabled || UserInputDisabled)
+            if (InputHandler.UserInputDisabled || UserInputDisabled || Alias == string.Empty)
                 return 0;
             return Godot.Input.GetActionStrength(Alias);
         }
@@ -36,7 +36,7 @@ public class InputAction : IInputAction
         {
             if (SimulatedPress || SimulatedJustPressed)
                 return true;
-            if (InputHandler.UserInputDisabled || UserInputDisabled)
+            if (InputHandler.UserInputDisabled || UserInputDisabled || Alias == string.Empty)
                 return false;
             return Godot.Input.IsActionPressed(Alias);
         }
@@ -62,7 +62,7 @@ public class InputAction : IInputAction
         {
             if (SimulatedJustPressed)
                 return true;
-            if (InputHandler.UserInputDisabled || UserInputDisabled)
+            if (InputHandler.UserInputDisabled || UserInputDisabled || Alias == string.Empty)
                 return false;
             return Godot.Input.IsActionJustPressed(Alias);
         }
@@ -78,7 +78,7 @@ public class InputAction : IInputAction
         {
             if (SimulatedJustReleased)
                 return true;
-            if (InputHandler.UserInputDisabled || UserInputDisabled)
+            if (InputHandler.UserInputDisabled || UserInputDisabled || Alias == string.Empty)
                 return false;
             return Godot.Input.IsActionJustReleased(Alias);
         }

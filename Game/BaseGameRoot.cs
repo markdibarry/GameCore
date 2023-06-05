@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using GameCore.Audio;
 using GameCore.GUI;
 using GameCore.Input;
@@ -106,6 +107,11 @@ public abstract partial class BaseGameRoot : Node
 
     protected void HandleInput(double delta)
     {
+        if (Godot.Input.IsActionJustPressed("collect"))
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
         GUIController.HandleInput(MenuInput, delta);
         GameSession?.HandleInput(MenuInput, delta);
         MenuInput.Update();

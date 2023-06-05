@@ -6,7 +6,7 @@ using Gictionary = Godot.Collections.Dictionary;
 
 namespace GameCore.Statistics;
 
-[Tool]
+[Tool, GlobalClass]
 public partial class Modifier : Resource
 {
     public Modifier() { }

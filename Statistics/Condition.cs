@@ -5,6 +5,7 @@ using Godot;
 namespace GameCore.Statistics;
 
 [JsonConverter(typeof(ConditionConverter))]
+[GlobalClass]
 public abstract partial class Condition : Resource
 {
     protected Condition() { }

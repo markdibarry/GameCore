@@ -7,6 +7,7 @@ public partial class OptionItem : MarginContainer
 {
     private bool _disabled;
     private bool _focused;
+    private bool _hovered;
     private bool _pressed;
     public OptionCursor? SelectionCursor { get; set; }
     [Export]
@@ -29,7 +30,15 @@ public partial class OptionItem : MarginContainer
             HandleDisplayStateChange();
         }
     }
-    public bool IsHovered { get; set; }
+    public bool IsHovered
+    {
+        get => _hovered;
+        set
+        {
+            _hovered = value;
+            HandleDisplayStateChange();
+        }
+    }
     public object? OptionData { get; set; }
     public bool IsPressed
     {
@@ -43,6 +52,8 @@ public partial class OptionItem : MarginContainer
     public bool Toggleable { get; set; }
     public event Action<OptionItem>? MouseEnteredItem;
     public event Action<OptionItem>? MouseExitedItem;
+    public event Action<OptionItem>? FocusRequested;
+    public event Action<OptionItem>? Pressed;
 
     public override void _Ready()
     {
@@ -54,6 +65,34 @@ public partial class OptionItem : MarginContainer
         }
     }
 
+    public override void _GuiInput(InputEvent inputEvent)
+    {
+        if (Disabled ||
+            inputEvent is not InputEventMouseButton mouseButton ||
+            mouseButton.ButtonIndex != MouseButton.Left)
+        {
+            inputEvent.Dispose();
+            return;
+        }
+
+        if (Toggleable)
+        {
+            if (mouseButton.Pressed)
+                IsPressed = !IsPressed;
+        }
+        else
+        {
+            IsPressed = mouseButton.Pressed;
+        }
+
+        inputEvent.Dispose();
+        if (!IsPressed)
+            return;
+        if (!Focused)
+            FocusRequested?.Invoke(this);
+        Pressed?.Invoke(this);
+    }
+
     protected virtual void HandleDisplayStateChange()
     {
         if (Disabled)
@@ -62,6 +101,8 @@ public partial class OptionItem : MarginContainer
             DisplayPressed();
         else if (Focused)
             DisplayFocused();
+        else if (IsHovered)
+            DisplayHovered();
         else
             DisplayNormal();
     }
@@ -74,7 +115,7 @@ public partial class OptionItem : MarginContainer
 
     protected virtual void DisplayPressed() => DisplayFocused();
 
-    protected virtual void DisplayHovered() { }
+    protected virtual void DisplayHovered() => Modulate = Colors.HoverGrey;
 
     private void OnMouseEntered()
     {

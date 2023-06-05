@@ -10,12 +10,12 @@ public partial class HandCursor : OptionCursor
     public static string GetScenePath() => GDEx.GetScenePath();
     private readonly double _cursorTimerOut = 1.0;
     private double _cursorTimer = 0;
-    public bool _selecting;
+    private bool _selecting;
 
     public override void _PhysicsProcess(double delta)
     {
         base._PhysicsProcess(delta);
-        if (_selecting)
+        if (_selecting && !IsHidden)
             Visible = !Visible;
     }
 

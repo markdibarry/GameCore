@@ -7,15 +7,102 @@ namespace GameCore.GUI;
 [Tool]
 public partial class WindowContainer : MarginContainer
 {
+    public WindowContainer()
+    {
+        _arrows = new() { MouseFilter = MouseFilterEnum.Ignore };
+        Texture2D arrowDownSmall = GD.Load<Texture2D>("res://GameCore/GUI/Cursors/arrowDownSmall.png");
+        Texture2D arrowLeftSmall = GD.Load<Texture2D>("res://GameCore/GUI/Cursors/arrowLeftSmall.png");
+        _arrowUp = new()
+        {
+            Visible = false,
+            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
+            SizeFlagsVertical = SizeFlags.ShrinkBegin,
+            MouseFilter = MouseFilterEnum.Stop,
+            Texture = arrowDownSmall,
+            StretchMode = TextureRect.StretchModeEnum.Keep,
+            FlipV = true
+        };
+        _arrowDown = new()
+        {
+            Visible = false,
+            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
+            SizeFlagsVertical = SizeFlags.ShrinkEnd,
+            MouseFilter = MouseFilterEnum.Stop,
+            Texture = arrowDownSmall,
+            StretchMode = TextureRect.StretchModeEnum.Keep
+        };
+        _arrowLeft = new()
+        {
+            Visible = false,
+            SizeFlagsHorizontal = SizeFlags.ShrinkBegin,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            MouseFilter = MouseFilterEnum.Stop,
+            Texture = arrowLeftSmall,
+            StretchMode = TextureRect.StretchModeEnum.Keep
+        };
+        _arrowRight = new()
+        {
+            Visible = false,
+            SizeFlagsHorizontal = SizeFlags.ShrinkEnd,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+            MouseFilter = MouseFilterEnum.Stop,
+            Texture = arrowLeftSmall,
+            StretchMode = TextureRect.StretchModeEnum.Keep,
+            FlipH = true
+        };
+
+        _arrows.AddChild(_arrowUp);
+        _arrows.AddChild(_arrowDown);
+        _arrows.AddChild(_arrowLeft);
+        _arrows.AddChild(_arrowRight);
+        AddChild(_arrows);
+
+        _scrollBars = new()
+        {
+            Visible = false,
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _hScrollBar = new()
+        {
+            Visible = false,
+            Page = 0.65,
+            GrowHorizontal = GrowDirection.Both,
+            GrowVertical = GrowDirection.Begin,
+            SizeFlagsVertical = SizeFlags.ShrinkEnd,
+            MouseFilter = MouseFilterEnum.Stop,
+            MouseForcePassScrollEvents = false,
+        };
+        _hScrollBar.SetAnchorsPreset(LayoutPreset.BottomWide);
+        _vScrollBar = new()
+        {
+            Visible = false,
+            Page = 0.65,
+            GrowHorizontal = GrowDirection.Begin,
+            GrowVertical = GrowDirection.Both,
+            SizeFlagsVertical = SizeFlags.ShrinkEnd,
+            MouseFilter = MouseFilterEnum.Stop,
+            MouseForcePassScrollEvents = false
+        };
+
+        _vScrollBar.SetAnchorsPreset(LayoutPreset.RightWide);
+        _scrollBars.AddChild(_hScrollBar);
+        _scrollBars.AddChild(_vScrollBar);
+        AddChild(_scrollBars);
+
+        ScrollBarEnabled = _scrollBarEnabled;
+    }
+
     private bool _sizeDirty;
-    private MarginContainer _arrows = null!;
-    private TextureRect _arrowUp = null!;
-    private TextureRect _arrowDown = null!;
-    private TextureRect _arrowLeft = null!;
-    private TextureRect _arrowRight = null!;
-    private Control _scrollBars = null!;
-    private HScrollBar _hScrollBar = null!;
-    private VScrollBar _vScrollBar = null!;
+    private bool _scrollBarEnabled;
+    private Control? _overlay;
+    private MarginContainer _arrows;
+    private TextureRect _arrowUp;
+    private TextureRect _arrowDown;
+    private TextureRect _arrowLeft;
+    private TextureRect _arrowRight;
+    private Control _scrollBars;
+    private HScrollBar _hScrollBar;
+    private VScrollBar _vScrollBar;
     public Container ClipContainer { get; set; } = null!;
     public Control? ClipContent { get; set; }
     public Vector2 Padding { get; set; }
@@ -25,11 +112,8 @@ public partial class WindowContainer : MarginContainer
         get => _scrollBars.Visible;
         set
         {
-            if (_scrollBars != null)
-            {
-                _scrollBars.Visible = value;
-                _arrows.Visible = !value;
-            }
+            _scrollBars.Visible = value;
+            _arrows.Visible = !value;
         }
     }
     [Export]
@@ -55,12 +139,33 @@ public partial class WindowContainer : MarginContainer
         }
     }
 
-    public override void _Ready() => Init();
-
-    public override void _Process(double delta)
+    public override void _Ready()
     {
-        if (_sizeDirty)
-            HandleSizeDirty();
+        SetNodeReferences();
+        SubscribeEvents();
+        int leftMargin = GetThemeConstant("margin_left");
+        int padding = leftMargin * 2;
+        Padding = new Vector2(padding, padding);
+        OverrideMargin(leftMargin);
+    }
+
+    public override void _GuiInput(InputEvent inputEvent)
+    {
+        if (inputEvent is not InputEventMouseButton mouseEvent || !mouseEvent.Pressed)
+        {
+            inputEvent.Dispose();
+            return;
+        }
+
+        switch (mouseEvent.ButtonIndex)
+        {
+            case MouseButton.WheelDown:
+            case MouseButton.WheelUp:
+                Scroll(mouseEvent.ButtonIndex);
+                break;
+        }
+
+        inputEvent.Dispose();
     }
 
     public override string[] _GetConfigurationWarnings()
@@ -83,18 +188,19 @@ public partial class WindowContainer : MarginContainer
         if (control == null || ClipContent == null)
             return Vector2.Zero;
         Vector2 position = ClipContent.Position;
-        // Adjust Right
-        if (ClipContainer.GlobalPosition.X + ClipContainer.Size.X < control.GlobalPosition.X + control.Size.X)
-            position.X = (control.Position.X + control.Size.X - ClipContainer.Size.X) * -1;
-        // Adjust Down
-        if (ClipContainer.GlobalPosition.Y + ClipContainer.Size.Y < control.GlobalPosition.Y + control.Size.Y)
-            position.Y = (control.Position.Y + control.Size.Y - ClipContainer.Size.Y) * -1;
-        // Adjust Left
-        if (ClipContainer.GlobalPosition.X > control.GlobalPosition.X)
-            position.X = -control.Position.X;
-        // Adjust Up
-        if (ClipContainer.GlobalPosition.Y > control.GlobalPosition.Y)
+
+        // Adjust Vertical
+        if (control.Position.Y < -ClipContent.Position.Y)
             position.Y = -control.Position.Y;
+        else if (control.Position.Y + control.Size.Y > -ClipContent.Position.Y + ClipContainer.Size.Y)
+            position.Y = -(control.Position.Y + control.Size.Y - ClipContainer.Size.Y);
+
+        // Adjust Horizontal
+        if (control.Position.X < -ClipContent.Position.X)
+            position.X = -control.Position.X;
+        else if (control.Position.X + control.Size.X > -ClipContent.Position.X + ClipContainer.Size.X)
+            position.X = -(control.Position.X + control.Size.X - ClipContainer.Size.X);
+
         return position;
     }
 
@@ -103,52 +209,84 @@ public partial class WindowContainer : MarginContainer
         _sizeDirty = false;
         UpdateArrowVisiblity();
         UpdateScrollBars();
+        if (_overlay != null && ClipContent != null)
+            _overlay.Position = ClipContainer.Position + ClipContent.Position;
     }
 
-    private void Init()
+    private void OnArrowInput(InputEvent inputEvent, Direction direction)
     {
-        SetNodeReferences();
-        SubscribeEvents();
-        int leftMargin = GetThemeConstant("margin_left");
-        int padding = leftMargin * 2;
-        Padding = new Vector2(padding, padding);
-        OverrideMargin(leftMargin);
+        if (inputEvent is not InputEventMouseButton mouseEvent
+            || !mouseEvent.Pressed
+            || mouseEvent.ButtonIndex != MouseButton.Left
+            || ClipContent is not OptionContainer optionContainer)
+        {
+            inputEvent.Dispose();
+            return;
+        }
+
+        ScrollToNextItem(optionContainer, direction);
+        inputEvent.Dispose();
     }
 
     private void OnChildEnteredTree(Node node)
     {
-        if (node is OptionContainer optionContainer)
-            optionContainer.ItemFocused += OnItemFocused;
-        if (node is Control control)
-        {
-            control.ItemRectChanged += OnContentChanged;
-            ClipContent = control;
-        }
+        if (node is not Control control)
+            return;
+        SetupContent(control);
+        ClipContent = control;
     }
 
     private void OnChildExitingTree(Node node)
     {
+        if (node is Control control)
+            control.ItemRectChanged -= OnContentChanged;
+
         if (node is OptionContainer optionContainer)
+        {
             optionContainer.ItemFocused -= OnItemFocused;
+            _overlay?.QueueFree();
+            _overlay = null;
+            optionContainer.Overlay = null;
+        }
+
         ClipContent = null;
         if (ClipContainer.GetChildCount() > 1)
             ClipContent = ClipContainer.GetChildren().First(x => x != node) as Control;
     }
 
-    private void OnContentChanged() => _sizeDirty = true;
+    private void OnContentChanged()
+    {
+        if (_sizeDirty)
+            return;
+        _sizeDirty = true;
+        CallDeferred(nameof(HandleSizeDirty));
+    }
 
     private void OnItemFocused(OptionContainer optionContainer, OptionItem? optionItem)
     {
         optionContainer.Position = GetScrollPosition(optionContainer.FocusedItem);
     }
 
-    private void OnScrollChanged(double value)
+    private void OnResized()
+    {
+        if (ClipContent is OptionContainer optionContainer)
+            optionContainer.WindowSize = ClipContainer.Size;
+    }
+
+    private void OnScrollXChanged(double value)
     {
         if (ClipContent == null)
             return;
-        float x = -ClipContent.Size.X * (float)(_hScrollBar.Value * 0.01);
-        float y = -ClipContent.Size.Y * (float)(_vScrollBar.Value * 0.01);
-        ClipContent.Position = new Vector2(x, y);
+        float x = -ClipContent.Size.X * (float)(value * 0.01);
+        ClipContent.Position = ClipContent.Position with { X = x };
+    }
+
+    private void OnScrollYChanged(double value)
+    {
+        if (ClipContent == null)
+            return;
+        float y = -ClipContent.Size.Y * (float)(value * 0.01);
+        ClipContent.Position = ClipContent.Position with { Y = y };
     }
 
     private void OnThemeChanged()
@@ -156,6 +294,92 @@ public partial class WindowContainer : MarginContainer
         int leftMargin = GetThemeConstant("margin_left");
         Padding = new Vector2(leftMargin * 2, leftMargin * 2);
         OverrideMargin(leftMargin);
+    }
+
+    private void SetupContent(Control control)
+    {
+        control.ItemRectChanged += OnContentChanged;
+
+        if (control is OptionContainer optionContainer)
+        {
+            optionContainer.ItemFocused += OnItemFocused;
+            _overlay = new();
+            AddChild(_overlay);
+            optionContainer.Overlay = _overlay;
+        }
+    }
+
+    private void Scroll(MouseButton mouseButton)
+    {
+        if (ClipContent is not OptionContainer optionContainer)
+            return;
+        OptionItem? optionToScroll = null;
+
+        if (optionContainer.Size.Y > ClipContainer.Size.Y)
+            optionToScroll = ScrollVertical(optionContainer, mouseButton);
+        else if (optionContainer.Size.X > ClipContainer.Size.X)
+            optionToScroll = ScrollHorizontal(optionContainer, mouseButton);
+
+        if (optionToScroll == null)
+            return;
+        optionContainer.Position = GetScrollPosition(optionToScroll);
+
+        OptionItem? ScrollHorizontal(OptionContainer optionContainer, MouseButton mouseButton)
+        {
+            if (mouseButton == MouseButton.WheelUp)
+                return GetNextScrollItemLeft(optionContainer);
+            else
+                return GetNextScrollItemRight(optionContainer);
+        }
+
+        OptionItem? ScrollVertical(OptionContainer optionContainer, MouseButton mouseButton)
+        {
+            if (mouseButton == MouseButton.WheelUp)
+                return GetNextScrollItemAbove(optionContainer);
+            else
+                return GetNextScrollItemBelow(optionContainer);
+        }
+    }
+
+    private void ScrollToNextItem(OptionContainer optionContainer, Direction direction)
+    {
+        OptionItem? optionItem = direction switch
+        {
+            Direction.Up => GetNextScrollItemAbove(optionContainer),
+            Direction.Right => GetNextScrollItemRight(optionContainer),
+            Direction.Down => GetNextScrollItemBelow(optionContainer),
+            Direction.Left => GetNextScrollItemLeft(optionContainer),
+            _ => null
+        };
+        if (optionItem == null)
+            return;
+        optionContainer.Position = GetScrollPosition(optionItem);
+    }
+
+    private OptionItem? GetNextScrollItemAbove(OptionContainer optionContainer)
+    {
+        if (optionContainer.Position.Y == 0)
+            return null;
+        return optionContainer.OptionItems.LastOrDefault(x => x.Position.Y < -optionContainer.Position.Y);
+    }
+
+    private OptionItem? GetNextScrollItemBelow(OptionContainer optionContainer)
+    {
+        float offset = -optionContainer.Position.Y + ClipContainer.Size.Y;
+        return optionContainer.OptionItems.FirstOrDefault(x => x.Position.Y + x.Size.Y > offset);
+    }
+
+    private OptionItem? GetNextScrollItemLeft(OptionContainer optionContainer)
+    {
+        if (optionContainer.Position.X == 0)
+            return null;
+        return optionContainer.OptionItems.LastOrDefault(x => x.Position.X < -optionContainer.Position.X);
+    }
+
+    private OptionItem? GetNextScrollItemRight(OptionContainer optionContainer)
+    {
+        float offset = -optionContainer.Position.X + ClipContainer.Size.X;
+        return optionContainer.OptionItems.FirstOrDefault(x => x.Position.X + x.Size.X > offset);
     }
 
     private void OverrideMargin(int margin)
@@ -175,16 +399,8 @@ public partial class WindowContainer : MarginContainer
 
     private void SetNodeReferences()
     {
-        _arrows = GetNode<MarginContainer>("Arrows");
-        _arrowUp = _arrows.GetNode<TextureRect>("ArrowUp");
-        _arrowDown = _arrows.GetNode<TextureRect>("ArrowDown");
-        _arrowLeft = _arrows.GetNode<TextureRect>("ArrowLeft");
-        _arrowRight = _arrows.GetNode<TextureRect>("ArrowRight");
-        _scrollBars = GetNode<Control>("ScrollBars");
-        _hScrollBar = _scrollBars.GetNode<HScrollBar>("HScrollBar");
-        _vScrollBar = _scrollBars.GetNode<VScrollBar>("VScrollBar");
         ClipContainer = GetNode<Container>("ClipContainer");
-        var children = ClipContainer.GetChildren();
+        Godot.Collections.Array<Node> children = ClipContainer.GetChildren();
         if (children.Count == 1 && children[0] is Control control)
             ClipContent = control;
     }
@@ -192,16 +408,19 @@ public partial class WindowContainer : MarginContainer
     private void SubscribeEvents()
     {
         ThemeChanged += OnThemeChanged;
-        _hScrollBar.ValueChanged += OnScrollChanged;
-        _vScrollBar.ValueChanged += OnScrollChanged;
+        _hScrollBar.ValueChanged += OnScrollXChanged;
+        _vScrollBar.ValueChanged += OnScrollYChanged;
+        _arrowUp.GuiInput += (InputEvent inputEvent) => OnArrowInput(inputEvent, Direction.Up);
+        _arrowRight.GuiInput += (InputEvent inputEvent) => OnArrowInput(inputEvent, Direction.Right);
+        _arrowDown.GuiInput += (InputEvent inputEvent) => OnArrowInput(inputEvent, Direction.Down);
+        _arrowLeft.GuiInput += (InputEvent inputEvent) => OnArrowInput(inputEvent, Direction.Left);
         ClipContainer.ChildEnteredTree += OnChildEnteredTree;
         ClipContainer.ChildExitingTree += OnChildExitingTree;
         ClipContainer.SortChildren += OnContentChanged;
-        if (ClipContent == null)
-            return;
-        ClipContent.ItemRectChanged += OnContentChanged;
-        if (ClipContent is OptionContainer optionContainer)
-            optionContainer.ItemFocused += OnItemFocused;
+        ClipContainer.Resized += OnResized;
+
+        if (ClipContent != null)
+            SetupContent(ClipContent);
     }
 
     private void UpdateArrowVisiblity()
@@ -223,6 +442,7 @@ public partial class WindowContainer : MarginContainer
             _arrowLeft.Visible = ClipContent.Position.X < 0;
             _arrowRight.Visible = ClipContent.Size.X + ClipContent.Position.X > ClipContainer.Size.X;
         }
+
         // V arrows
         if (ClipContent.Size.Y > ClipContainer.Size.Y)
         {
@@ -249,6 +469,7 @@ public partial class WindowContainer : MarginContainer
             _hScrollBar.Page = (ClipContainer.Size.X / ClipContent.Size.X) * 100;
             _hScrollBar.Value = (-ClipContent.Position.X / ClipContent.Size.X) * 100;
         }
+
         // VScrollBar
         if (ClipContent.Size.Y > ClipContainer.Size.Y)
         {

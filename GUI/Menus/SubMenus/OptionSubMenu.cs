@@ -13,7 +13,6 @@ public partial class OptionSubMenu : SubMenu
     private readonly List<OptionContainer> _optionContainers = new();
     private OptionCursor _cursor = null!;
     private Control _cursorsContainer = null!;
-
     public OptionContainer? CurrentContainer { get; private set; }
     public IReadOnlyCollection<OptionContainer> OptionContainers => _optionContainers;
     protected string FocusedSoundPath { get; set; } = Config.GUIFocusSoundPath;
@@ -83,9 +82,16 @@ public partial class OptionSubMenu : SubMenu
     protected virtual void OnItemFocused(OptionContainer optionContainer, OptionItem? optionItem) { }
 
     /// <summary>
+    /// A callback for when an item was hovered.
+    /// </summary>
+    /// <param name="optionContainer"></param>
+    /// <param name="optionItem"></param>
+    protected virtual void OnItemHovered(OptionContainer optionContainer, OptionItem optionItem) { }
+
+    /// <summary>
     /// A callback for when an item was selected.
     /// </summary>
-    protected virtual void OnSelectPressed() { }
+    protected virtual void OnItemPressed(OptionContainer optionContainer, OptionItem optionItem) { }
 
     protected sealed override void OnPostSetupInternal()
     {
@@ -117,13 +123,26 @@ public partial class OptionSubMenu : SubMenu
     protected void SubscribeToEvents(OptionContainer optionContainer)
     {
         optionContainer.ItemFocused += OnItemFocusedInternal;
-        optionContainer.ItemSelectionChanged += OnItemSelectionChanged;
-        optionContainer.FocusOOB += OnOOBFocused;
+        optionContainer.ItemHovered += OnItemHovered;
+        optionContainer.ItemPressed += OnItemPressed;
+        optionContainer.FocusOOB += OnOOBFocusedInternal;
+        optionContainer.ContainerRectChanged += OnContainerRectChanged;
     }
 
     private void MoveCursorToItem(OptionItem optionItem)
     {
         _cursor.MoveToTarget(optionItem);
+    }
+
+    private void OnContainerRectChanged(OptionContainer optionContainer)
+    {
+        if (CurrentContainer != optionContainer)
+            return;
+        if (optionContainer.FocusedItem == null)
+            return;
+
+        _cursor.MoveToTarget(optionContainer.FocusedItem);
+        _cursor.Visible = optionContainer.IsItemInView(optionContainer.FocusedItem) && !optionContainer.AllSelected;
     }
 
     private void OnItemFocusedInternal(OptionContainer optionContainer, OptionItem? optionItem)
@@ -139,35 +158,17 @@ public partial class OptionSubMenu : SubMenu
         OnItemFocused(optionContainer, optionItem);
     }
 
-    private void OnItemSelectionChanged(OptionItem optionItem)
+    private void OnItemPressedInternal()
     {
-        if (!optionItem.IsPressed)
-        {
-            optionItem.SelectionCursor?.DisableSelectionMode();
-            return;
-        }
-
-        if (optionItem.SelectionCursor != null)
-            return;
-
-        var cursor = _cursorScene.Instantiate<OptionCursor>();
-        cursor.EnableSelectionMode();
-        optionItem.SelectionCursor = cursor;
-        _cursorsContainer.AddChild(cursor);
-        cursor.MoveToTarget(optionItem);
+        if (CurrentContainer?.FocusedItem != null)
+            OnItemPressed(CurrentContainer, CurrentContainer.FocusedItem);
     }
 
-    private void OnSelectPressedInternal()
+    private void OnOOBFocusedInternal(OptionContainer container, Direction direction)
     {
-        //if (CurrentContainer == null || !CurrentContainer.AllSelected &&
-        //    (CurrentContainer.FocusedItem == null || CurrentContainer.FocusedItem.Disabled))
-        //{
-        //    Audio.PlaySoundFX(FocusedSoundPath);
-        //    return;
-        //}
-
-        //Audio.PlaySoundFX(SelectedSoundPath);
-        OnSelectPressed();
+        if (container.AllSelected)
+            _cursor.Visible = false;
+        OnOOBFocused(container, direction);
     }
 
     private void SetContainer(OptionContainer optionContainer)

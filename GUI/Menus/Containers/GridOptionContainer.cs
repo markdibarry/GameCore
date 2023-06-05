@@ -7,19 +7,21 @@ namespace GameCore.GUI;
 [Tool]
 public partial class GridOptionContainer : OptionContainer
 {
+    private GridContainer _gridContainer = null!;
     private bool _singleRow;
+
     [ExportGroup("Selecting")]
-    [Export] public bool DimItems { get; set; }
-    [Export] public bool FocusWrap { get; set; } = true;
+    [Export]
+    public bool FocusWrap { get; set; } = true;
     [ExportGroup("Sizing")]
     [Export(PropertyHint.Range, "1,20")]
     public int Columns
     {
-        get => GridContainer?.Columns ?? 1;
+        get => _gridContainer?.Columns ?? 1;
         set
         {
-            if (GridContainer != null)
-                GridContainer.Columns = value;
+            if (_gridContainer != null)
+                _gridContainer.Columns = value;
         }
     }
     [Export]
@@ -32,45 +34,153 @@ public partial class GridOptionContainer : OptionContainer
             UpdateRows();
         }
     }
-    public GridContainer GridContainer { get; set; } = null!;
-    private bool IsSingleRow => OptionItems.Count <= GridContainer.Columns;
+    private bool IsSingleRow => OptionItems.Count <= _gridContainer.Columns;
 
-    public override void _Ready() => Init();
+    public override void _Ready()
+    {
+        base._Ready();
+        foreach (OptionItem item in _gridContainer.GetChildren<OptionItem>())
+            OptionItems.Add(item);
+    }
 
     public override void AddOption(OptionItem optionItem)
     {
-        GridContainer.AddChild(optionItem);
+        _gridContainer.AddChild(optionItem);
     }
 
     public override void ClearOptionItems()
     {
         OptionItems.Clear();
-        GridContainer.QueueFreeAllChildren();
+        _gridContainer.QueueFreeAllChildren();
     }
 
     public override void FocusDirection(Direction direction)
     {
-        switch (direction)
+        int currentIndex = AllSelected ? -1 : FocusedIndex;
+        int nextIndex = -1;
+
+        if (!AllSelected)
         {
-            case Direction.Up:
-                FocusUp();
-                break;
-            case Direction.Right:
-                FocusRight();
-                break;
-            case Direction.Down:
-                FocusDown();
-                break;
-            case Direction.Left:
-                FocusLeft();
-                break;
+            nextIndex = direction switch
+            {
+                Direction.Up => GetNextIndexUp(),
+                Direction.Right => GetNextIndexRight(),
+                Direction.Down => GetNextIndexDown(),
+                Direction.Left => GetNextIndexLeft(),
+                _ => 0
+            };
+        }
+
+        // No next index found
+        if (nextIndex != -1)
+        {
+            FocusItem(nextIndex);
+            return;
+        }
+        else if (!FocusWrap || OptionItems.Count <= 1)
+        {
+            RaiseFocusOOB(direction);
+            return;
+        }
+
+        nextIndex = direction switch
+        {
+            Direction.Up => GetBottomEndIndex(),
+            Direction.Down => GetTopEndIndex(),
+            Direction.Left => GetRightEndIndex(),
+            Direction.Right => GetLeftEndIndex(),
+            _ => 0
+        };
+
+        if (nextIndex == currentIndex)
+            return;
+
+        if (nextIndex == -1)
+        {
+            SelectAll();
+        }
+        else if (AllSelected)
+        {
+            UnselectAll();
+            FocusItem(nextIndex);
+        }
+        else
+        {
+            FocusItem(nextIndex);
+        }
+
+        RaiseFocusOOB(direction);
+
+        int GetNextIndexUp()
+        {
+            int nextIndex = currentIndex - _gridContainer.Columns;
+            return IsValidIndex(nextIndex) ? nextIndex : -1;
+        }
+
+        int GetNextIndexDown()
+        {
+            int nextIndex = currentIndex + _gridContainer.Columns;
+            return IsValidIndex(nextIndex) ? nextIndex : -1;
+        }
+
+        int GetNextIndexLeft()
+        {
+            int nextIndex = FocusedIndex - 1;
+            return IsValidIndex(nextIndex) && currentIndex % _gridContainer.Columns != 0 ? nextIndex : -1;
+        }
+
+        int GetNextIndexRight()
+        {
+            int nextIndex = FocusedIndex + 1;
+            return IsValidIndex(nextIndex) && (currentIndex + 1) % _gridContainer.Columns != 0 ? nextIndex : -1;
+        }
+
+        int GetTopEndIndex()
+        {
+            if (CurrentOptionMode.HasFlag(OptionMode.All) && !IsSingleRow && !AllSelected)
+                return -1;
+            return currentIndex % _gridContainer.Columns;
+        }
+
+        int GetBottomEndIndex()
+        {
+            if (CurrentOptionMode.HasFlag(OptionMode.All) && !IsSingleRow && !AllSelected)
+                return -1;
+            int firstRowAdjIndex = currentIndex % _gridContainer.Columns;
+            int lastIndex = OptionItems.Count - 1;
+            int lastRowFirstIndex = lastIndex / _gridContainer.Columns * _gridContainer.Columns;
+            return Math.Min(lastRowFirstIndex + firstRowAdjIndex, lastIndex);
+        }
+
+        int GetLeftEndIndex()
+        {
+            if (IsSingleRow)
+            {
+                if (CurrentOptionMode.HasFlag(OptionMode.All) && !AllSelected)
+                    return -1;
+                else
+                    return 0;
+            }
+            return currentIndex / _gridContainer.Columns * _gridContainer.Columns;
+        }
+
+        int GetRightEndIndex()
+        {
+            if (IsSingleRow)
+            {
+                if (CurrentOptionMode.HasFlag(OptionMode.All) && !AllSelected)
+                    return -1;
+                else
+                    return OptionItems.Count - 1;
+            }
+            return (((currentIndex / _gridContainer.Columns) + 1) * _gridContainer.Columns) - 1;
         }
     }
 
     public override void ResetContainerFocus()
     {
         FocusedIndex = 0;
-        GridContainer.Position = Vector2.Zero;
+        _gridContainer.Position = Vector2.Zero;
     }
 
     protected virtual void OnChildAdded(Node node)
@@ -82,7 +192,9 @@ public partial class GridOptionContainer : OptionContainer
         if (MouseEnabled)
         {
             optionItem.MouseFilter = MouseFilterEnum.Stop;
-            optionItem.MouseEnteredItem += OnMouseEnteredItem;
+            optionItem.MouseEnteredItem += OnEnterItemHover;
+            optionItem.FocusRequested += OnItemFocusRequested;
+            optionItem.Pressed += OnItemPressed;
         }
 
         UpdateRows();
@@ -97,164 +209,30 @@ public partial class GridOptionContainer : OptionContainer
         UpdateRows();
     }
 
-    private void FocusUp()
+    protected virtual void OnItemFocusRequested(OptionItem optionItem) => FocusItem(optionItem);
+
+    protected virtual void OnItemPressed(OptionItem optionItem) => RaiseItemPressed(optionItem);
+
+    protected override void SetNodeReferences()
     {
-        int currentIndex = FocusedIndex == AllSelectedIndex ? PreviousIndex : FocusedIndex;
-        int nextIndex = currentIndex - GridContainer.Columns;
-        if (IsValidIndex(nextIndex))
-            FocusItem(nextIndex);
-        else
-            LeaveItemFocus(Direction.Up);
+        _gridContainer = GetNode<GridContainer>("GridContainer");
     }
 
-    private void FocusDown()
+    protected override void SubscribeEvents()
     {
-        int currentIndex = FocusedIndex == AllSelectedIndex ? PreviousIndex : FocusedIndex;
-        int nextIndex = currentIndex + GridContainer.Columns;
-        if (IsValidIndex(nextIndex))
-            FocusItem(nextIndex);
-        else
-            LeaveItemFocus(Direction.Down);
+        base.SubscribeEvents();
+        _gridContainer.ChildEnteredTree += OnChildAdded;
+        _gridContainer.ChildExitingTree += OnChildExiting;
     }
 
-    private void FocusLeft()
+    private void OnEnterItemHover(OptionItem optionItem)
     {
-        int currentIndex = FocusedIndex == AllSelectedIndex ? PreviousIndex : FocusedIndex;
-        int nextIndex = FocusedIndex - 1;
-        if (IsValidIndex(nextIndex) && currentIndex % GridContainer.Columns != 0)
-            FocusItem(nextIndex);
-        else
-            LeaveItemFocus(Direction.Left);
-    }
-
-    private void FocusRight()
-    {
-        int currentIndex = FocusedIndex == AllSelectedIndex ? PreviousIndex : FocusedIndex;
-        int nextIndex = FocusedIndex + 1;
-        if (IsValidIndex(nextIndex) && (currentIndex + 1) % GridContainer.Columns != 0)
-            FocusItem(nextIndex);
-        else
-            LeaveItemFocus(Direction.Right);
-    }
-
-    private void FocusTopEnd()
-    {
-        if (CurrentOptionMode.HasFlag(OptionMode.All) && !IsSingleRow && FocusedIndex != AllSelectedIndex)
-        {
-            FocusItem(AllSelectedIndex);
-            return;
-        }
-        int currentIndex = FocusedIndex == AllSelectedIndex ? PreviousIndex : FocusedIndex;
-        int nextIndex = currentIndex % GridContainer.Columns;
-        if (nextIndex == currentIndex)
-            return;
-        FocusItem(nextIndex);
-    }
-
-    private void FocusBottomEnd()
-    {
-        if (CurrentOptionMode.HasFlag(OptionMode.All) && !IsSingleRow && FocusedIndex != AllSelectedIndex)
-        {
-            FocusItem(AllSelectedIndex);
-            return;
-        }
-        int currentIndex = FocusedIndex == AllSelectedIndex ? PreviousIndex : FocusedIndex;
-        int firstRowAdjIndex = currentIndex % GridContainer.Columns;
-        int lastIndex = OptionItems.Count - 1;
-        int lastRowFirstIndex = lastIndex / GridContainer.Columns * GridContainer.Columns;
-        int nextIndex = Math.Min(lastRowFirstIndex + firstRowAdjIndex, lastIndex);
-        if (nextIndex == currentIndex)
-            return;
-        FocusItem(nextIndex);
-    }
-
-    private void FocusLeftEnd()
-    {
-        if (IsSingleRow)
-        {
-            if (CurrentOptionMode.HasFlag(OptionMode.All) && FocusedIndex != AllSelectedIndex)
-                FocusItem(AllSelectedIndex);
-            else
-                FocusItem(0);
-            return;
-        }
-        int currentIndex = FocusedIndex == AllSelectedIndex ? PreviousIndex : FocusedIndex;
-        int nextIndex = currentIndex / GridContainer.Columns * GridContainer.Columns;
-        if (nextIndex == currentIndex)
-            return;
-        FocusItem(nextIndex);
-    }
-
-    private void FocusRightEnd()
-    {
-        if (IsSingleRow)
-        {
-            if (CurrentOptionMode.HasFlag(OptionMode.All) && FocusedIndex != AllSelectedIndex)
-                FocusItem(AllSelectedIndex);
-            else
-                FocusItem(OptionItems.Count - 1);
-            return;
-        }
-        int currentIndex = FocusedIndex == AllSelectedIndex ? PreviousIndex : FocusedIndex;
-        int nextIndex = (((currentIndex / GridContainer.Columns) + 1) * GridContainer.Columns) - 1;
-        if (nextIndex == currentIndex)
-            return;
-        FocusItem(nextIndex);
-    }
-
-    private void Init()
-    {
-        SetNodeReferences();
-        SubscribeEvents();
-        foreach (OptionItem item in GridContainer.GetChildren<OptionItem>())
-            OptionItems.Add(item);
-    }
-
-    private void LeaveItemFocus(Direction direction)
-    {
-        if (FocusWrap)
-            WrapFocus(direction);
-        RaiseFocusOOB(direction);
-    }
-
-    private void OnMouseEnteredItem(OptionItem optionItem)
-    {
-        FocusItem(optionItem);
-    }
-
-    private void SetNodeReferences()
-    {
-        GridContainer = GetNode<GridContainer>("GridContainer");
-    }
-
-    private void SubscribeEvents()
-    {
-        GridContainer.ChildEnteredTree += OnChildAdded;
-        GridContainer.ChildExitingTree += OnChildExiting;
+        RaiseItemHovered(optionItem);
     }
 
     private void UpdateRows()
     {
         if (SingleRow)
             Columns = Math.Max(OptionItems.Count, 1);
-    }
-
-    private void WrapFocus(Direction direction)
-    {
-        switch (direction)
-        {
-            case Direction.Up:
-                FocusBottomEnd();
-                break;
-            case Direction.Down:
-                FocusTopEnd();
-                break;
-            case Direction.Left:
-                FocusRightEnd();
-                break;
-            case Direction.Right:
-                FocusLeftEnd();
-                break;
-        }
     }
 }

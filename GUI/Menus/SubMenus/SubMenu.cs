@@ -11,12 +11,12 @@ namespace GameCore.GUI;
 public partial class SubMenu : Control
 {
     protected static IAudioService Audio { get; } = Locator.Audio;
+    private Color _tempColor;
     public State CurrentState { get; protected set; }
     protected Control Background { get; private set; } = null!;
     protected MarginContainer Foreground { get; private set; } = null!;
     [Export] protected bool PreventCancel { get; set; }
     [Export] protected bool PreventCloseAll { get; set; }
-    protected Color TempColor { get; set; }
     protected IGUIController GUIController { get; private set; } = null!;
     protected IMenu Menu { get; private set; } = null!;
     protected string CloseSoundPath { get; set; } = Config.GUICloseSoundPath;
@@ -34,7 +34,7 @@ public partial class SubMenu : Control
 
     public override void _Ready()
     {
-        TempColor = Modulate;
+        _tempColor = Modulate;
         Modulate = Godot.Colors.Transparent;
         if (this.IsToolDebugMode())
             _ = InitAsync(null!, null!);
@@ -76,7 +76,7 @@ public partial class SubMenu : Control
         SetNodeReferencesInternal();
         OnSetupInternal();
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        Modulate = TempColor;
+        Modulate = _tempColor;
         await AnimateOpenAsync();
         OnPostSetupInternal();
         CurrentState = State.Available;

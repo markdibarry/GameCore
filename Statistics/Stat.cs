@@ -4,7 +4,7 @@ using Gictionary = Godot.Collections.Dictionary;
 
 namespace GameCore.Statistics;
 
-[Tool]
+[Tool, GlobalClass]
 public partial class Stat : Resource
 {
     public Stat() { }

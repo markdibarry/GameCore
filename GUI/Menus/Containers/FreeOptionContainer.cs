@@ -8,8 +8,6 @@ public partial class FreeOptionContainer : OptionContainer
 {
     private Control _optionItemContainer = null!;
 
-    public override void _Ready() => SetNodeReferences();
-
     public override void AddOption(OptionItem optionItem)
     {
         OptionItems.Add(optionItem);
@@ -34,7 +32,7 @@ public partial class FreeOptionContainer : OptionContainer
 
     public override void ResetContainerFocus() => FocusedIndex = 0;
 
-    private void SetNodeReferences()
+    protected override void SetNodeReferences()
     {
         _optionItemContainer = GetNode<Control>("OptionItems");
     }

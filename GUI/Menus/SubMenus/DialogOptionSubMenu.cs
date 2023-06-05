@@ -21,9 +21,9 @@ public partial class DialogOptionSubMenu : OptionSubMenu
         DialogChoices = choices.ToArray();
     }
 
-    protected override void OnSelectPressed()
+    protected override void OnItemPressed(OptionContainer optionContainer, OptionItem optionItem)
     {
-        if (CurrentContainer?.FocusedItem?.OptionData is not int selectedIndex)
+        if (optionItem.OptionData is not int selectedIndex)
             return;
         List<Choice> data = new(1) { DialogChoices[selectedIndex] };
         _ = CloseSubMenuAsync(data: data);
