@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
+using Arenbee.Statistics;
 using GameCore.Utility;
 
 namespace GameCore.Statistics;
@@ -14,9 +15,7 @@ public abstract class BaseStats
         DamageToProcess = new();
         Modifiers = new();
         StatusEffects = new();
-        StatLookup = new();
-        foreach (Stat stat in statLookup)
-            StatLookup[stat.StatType] = new(stat);
+        StatLookup = statLookup.ToDictionary(x => x.StatType, x => new Stat(x));
         foreach (Modifier modifier in mods)
             AddMod(new(modifier));
     }
@@ -29,7 +28,7 @@ public abstract class BaseStats
         : this(null!, Array.Empty<Stat>(), Array.Empty<Modifier>())
     {
         foreach (KeyValuePair<int, Stat> pair in stats.StatLookup)
-            StatLookup[pair.Key] = pair.Value;
+            StatLookup[pair.Key] = new(pair.Value);
         foreach (KeyValuePair<int, List<Modifier>> pair in stats.Modifiers)
             Modifiers[pair.Key] = pair.Value.ToList();
     }
@@ -38,9 +37,9 @@ public abstract class BaseStats
     public Queue<IDamageRequest> DamageToProcess { get; }
     public IDamageResult? CurrentDamageResult { get; private set; }
     [JsonConverter(typeof(ModifierLookupConverter))]
-    public Dictionary<int, List<Modifier>> Modifiers { get; }
     public Dictionary<int, Stat> StatLookup { get; }
     public IDamageable StatsOwner { get; }
+    protected Dictionary<int, List<Modifier>> Modifiers { get; }
     protected List<IStatusEffect> StatusEffects { get; }
     protected static IStatusEffectDB StatusEffectDB { get; } = StatsLocator.StatusEffectDB;
     public event Action<IDamageResult>? DamageReceived;
@@ -51,8 +50,7 @@ public abstract class BaseStats
 
     public virtual void AddMod(Modifier mod)
     {
-        mod.InitConditions(this);
-        if (mod.ShouldRemove() && mod.SourceType == SourceType.Independent)
+        if (mod.SourceType == SourceType.Independent && mod.ShouldRemove(this))
             return;
         List<Modifier> mods = Modifiers.GetOrAddNew(mod.StatType);
 
@@ -64,10 +62,11 @@ public abstract class BaseStats
             return;
         }
 
-        mod.IsActive = !mod.ShouldDeactivate();
-
         mods.Add(mod);
-        mod.SubscribeConditions(OnActivationConditionMet, OnRemovalConditionMet);
+        mod.IsActive = !mod.ShouldDeactivate(this);
+        mod.ConditionUpdated += OnConditionUpdated;
+        mod.ConditionChanged += OnConditionChanged;
+        mod.SubscribeConditions(this);
         UpdateSpecialCategory(mod.StatType);
         RaiseModChanged(mod, ModChangeType.Add);
     }
@@ -127,11 +126,11 @@ public abstract class BaseStats
 
     public virtual void RemoveMod(Modifier mod)
     {
-        if (!Modifiers.TryGetValue(mod.StatType, out List<Modifier>? mods))
+        if (!Modifiers.TryGetValue(mod.StatType, out List<Modifier>? mods) || !mods.Contains(mod))
             return;
-        if (!mods.Contains(mod))
-            return;
-        mod.UnsubscribeConditions();
+        mod.ConditionUpdated -= OnConditionUpdated;
+        mod.ConditionChanged -= OnConditionChanged;
+        mod.UnsubscribeConditions(this);
         mods.Remove(mod);
         if (mods.Count == 0)
             Modifiers.Remove(mod.StatType);
@@ -140,17 +139,6 @@ public abstract class BaseStats
     }
 
     protected abstract IDamageResult HandleDamage(IDamageRequest damageData);
-
-    protected void OnActivationConditionMet(Modifier mod)
-    {
-        UpdateSpecialCategory(mod.StatType);
-    }
-
-    protected void OnRemovalConditionMet(Modifier mod)
-    {
-        if (mod.SourceType == SourceType.Independent)
-            RemoveMod(mod);
-    }
 
     protected void RaiseModChanged(Modifier mod, ModChangeType modChange) => ModChanged?.Invoke(mod, modChange);
 
@@ -167,10 +155,12 @@ public abstract class BaseStats
         StatusEffectData? effectData = StatusEffectDB.GetEffectData(statusEffectType);
         if (effectData == null)
             return;
-        StatusEffect statusEffect = new(this, effectData);
-        statusEffect.SubscribeCondition();
+        IStatusEffect statusEffect = new StatusEffect(effectData);
+        statusEffect.ConditionUpdated += OnConditionUpdated;
+        statusEffect.ConditionChanged += OnStatusEffectConditionChanged;
+        statusEffect.SubscribeConditions(this);
         StatusEffects.Add(statusEffect);
-        statusEffect.EffectData.EnterEffect?.Invoke(statusEffect);
+        statusEffect.EffectData.EnterEffect?.Invoke(this, statusEffect);
         StatusEffectChanged?.Invoke(statusEffectType, ModChangeType.Add);
     }
 
@@ -179,9 +169,36 @@ public abstract class BaseStats
         IStatusEffect? statusEffect = StatusEffects.FirstOrDefault(x => x.EffectType == statusEffectType);
         if (statusEffect == null)
             return;
-        statusEffect.UnsubscribeCondition();
-        statusEffect.EffectData.ExitEffect?.Invoke(statusEffect);
+        statusEffect.ConditionUpdated -= OnConditionUpdated;
+        statusEffect.ConditionChanged -= OnStatusEffectConditionChanged;
+        statusEffect.UnsubscribeConditions(this);
+        statusEffect.EffectData.ExitEffect?.Invoke(this, statusEffect);
         StatusEffects.Remove(statusEffect);
         StatusEffectChanged?.Invoke(statusEffectType, ModChangeType.Remove);
+    }
+
+    private void OnConditionUpdated(Condition condition) => condition.UpdateCondition(this);
+
+    private void OnConditionChanged(Modifier mod, Condition condition)
+    {
+        if (mod.IsConditionRemovable(condition))
+        {
+            if (mod.ShouldRemove(this))
+                RemoveMod(mod);
+        }
+        else
+        {
+            bool isActive = !mod.ShouldDeactivate(this);
+            if (mod.IsActive != isActive)
+            {
+                mod.IsActive = isActive;
+                UpdateSpecialCategory(mod.StatType);
+            }
+        }
+    }
+
+    private void OnStatusEffectConditionChanged(IStatusEffect statusEffect, Condition condition)
+    {
+        statusEffect.HandleChanges(this, condition);
     }
 }

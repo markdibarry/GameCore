@@ -91,7 +91,7 @@ public partial class OptionSubMenu : SubMenu
     /// <summary>
     /// A callback for when an item was selected.
     /// </summary>
-    protected virtual void OnItemPressed(OptionContainer optionContainer, OptionItem optionItem) { }
+    protected virtual void OnItemPressed(OptionContainer optionContainer, OptionItem? optionItem) { }
 
     protected sealed override void OnPostSetupInternal()
     {
@@ -148,8 +148,7 @@ public partial class OptionSubMenu : SubMenu
     private void OnItemFocusedInternal(OptionContainer optionContainer, OptionItem? optionItem)
     {
         _cursor.Visible = optionItem != null;
-        if (CurrentContainer != null
-            && (optionContainer != CurrentContainer || optionContainer.FocusedIndex != optionContainer.PreviousIndex))
+        if (CurrentContainer != null && optionContainer != CurrentContainer)
             Audio.PlaySoundFX(FocusedSoundPath);
         if (CurrentContainer != optionContainer)
             SetContainer(optionContainer);

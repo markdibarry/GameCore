@@ -1,8 +1,10 @@
-﻿namespace GameCore.Statistics;
+﻿using System;
 
+namespace GameCore.Statistics;
+
+[Flags]
 public enum ConditionResultType
 {
-    Remove,
-    Deactivate,
-    RemoveOrDeactivate
+    Remove = 1,
+    Deactivate = 2,
 }

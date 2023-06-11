@@ -1,38 +1,54 @@
-﻿namespace GameCore.Statistics;
+﻿using System;
+
+namespace GameCore.Statistics;
 
 public class StatusEffect : IStatusEffect
 {
-    public StatusEffect(BaseStats stats, StatusEffectData effectData)
+    public StatusEffect(StatusEffectData effectData)
     {
-        Stats = stats;
         EffectData = effectData;
-        if (effectData.TickCondition != null)
+        TickCondition = effectData.TickCondition?.Clone();
+    }
+
+    public Condition? TickCondition { get; }
+    public StatusEffectData EffectData { get; }
+    public int EffectType => EffectData.EffectType;
+    public event Action<Condition>? ConditionUpdated;
+    public event Action<IStatusEffect, Condition>? ConditionChanged;
+
+    public void HandleChanges(BaseStats stats, Condition condition)
+    {
+        if (TickCondition == null || !TickCondition.CheckIfConditionsMet(stats))
+            return;
+        EffectData.TickEffect?.Invoke(stats, this);
+        TickCondition.Reset();
+    }
+
+    public void SubscribeConditions(BaseStats stats)
+    {
+        Condition? nextCondition = TickCondition;
+        while (nextCondition != null)
         {
-            _tickCondition = effectData.TickCondition.Clone();
-            _tickCondition.SetStats(stats);
+            nextCondition.SubscribeEvents(stats);
+            nextCondition.UpdatedDelegate = new(OnConditionUpdated);
+            nextCondition.StatusChangedDelegate = new(OnConditionChanged);
+            nextCondition = nextCondition.AdditionalCondition;
         }
     }
 
-    private readonly Condition? _tickCondition;
-    public StatusEffectData EffectData { get; }
-    public int EffectType => EffectData.EffectType;
-    public BaseStats Stats { get; }
-
-    public void CallEffectTick()
+    public void UnsubscribeConditions(BaseStats stats)
     {
-        if (_tickCondition == null || !_tickCondition.CheckConditions())
-            return;
-        EffectData.TickEffect?.Invoke(this);
-        _tickCondition.Reset();
+        Condition? nextCondition = TickCondition;
+        while (nextCondition != null)
+        {
+            nextCondition.UnsubscribeEvents(stats);
+            nextCondition.UpdatedDelegate = null;
+            nextCondition.StatusChangedDelegate = null;
+            nextCondition = nextCondition.AdditionalCondition;
+        }
     }
 
-    public void SubscribeCondition()
-    {
-        _tickCondition?.Subscribe(CallEffectTick);
-    }
+    private void OnConditionUpdated(Condition condition) => ConditionUpdated?.Invoke(condition);
 
-    public void UnsubscribeCondition()
-    {
-        _tickCondition?.Unsubscribe();
-    }
+    private void OnConditionChanged(Condition condition) => ConditionChanged?.Invoke(this, condition);
 }

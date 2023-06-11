@@ -56,7 +56,12 @@ public partial class GridOptionContainer : OptionContainer
 
     public override void FocusDirection(Direction direction)
     {
-        int currentIndex = AllSelected ? -1 : FocusedIndex;
+        if (OptionItems.Count <= 1)
+        {
+            RaiseFocusOOB(direction);
+            return;
+        }
+
         int nextIndex = -1;
 
         if (!AllSelected)
@@ -67,86 +72,81 @@ public partial class GridOptionContainer : OptionContainer
                 Direction.Right => GetNextIndexRight(),
                 Direction.Down => GetNextIndexDown(),
                 Direction.Left => GetNextIndexLeft(),
-                _ => 0
+                _ => -1
             };
         }
 
-        // No next index found
-        if (nextIndex != -1)
+        if (nextIndex != -1) // Index found
         {
             FocusItem(nextIndex);
             return;
         }
-        else if (!FocusWrap || OptionItems.Count <= 1)
+
+        if (!FocusWrap)
         {
             RaiseFocusOOB(direction);
             return;
         }
 
-        nextIndex = direction switch
+        nextIndex = direction switch // Get OOB index
         {
             Direction.Up => GetBottomEndIndex(),
             Direction.Down => GetTopEndIndex(),
             Direction.Left => GetRightEndIndex(),
             Direction.Right => GetLeftEndIndex(),
-            _ => 0
+            _ => -1
         };
 
-        if (nextIndex == currentIndex)
+        if (nextIndex == FocusedIndex) // if no change, still raise OOB event
+        {
+            RaiseFocusOOB(direction);
             return;
+        }
 
         if (nextIndex == -1)
-        {
             SelectAll();
-        }
         else if (AllSelected)
-        {
             UnselectAll();
-            FocusItem(nextIndex);
-        }
-        else
-        {
-            FocusItem(nextIndex);
-        }
 
+        FocusItem(nextIndex);
         RaiseFocusOOB(direction);
 
         int GetNextIndexUp()
         {
-            int nextIndex = currentIndex - _gridContainer.Columns;
+            int nextIndex = FocusedIndex - _gridContainer.Columns;
             return IsValidIndex(nextIndex) ? nextIndex : -1;
         }
 
         int GetNextIndexDown()
         {
-            int nextIndex = currentIndex + _gridContainer.Columns;
+            int nextIndex = FocusedIndex + _gridContainer.Columns;
             return IsValidIndex(nextIndex) ? nextIndex : -1;
         }
 
         int GetNextIndexLeft()
         {
             int nextIndex = FocusedIndex - 1;
-            return IsValidIndex(nextIndex) && currentIndex % _gridContainer.Columns != 0 ? nextIndex : -1;
+            return IsValidIndex(nextIndex) && FocusedIndex % _gridContainer.Columns != 0 ? nextIndex : -1;
         }
 
         int GetNextIndexRight()
         {
             int nextIndex = FocusedIndex + 1;
-            return IsValidIndex(nextIndex) && (currentIndex + 1) % _gridContainer.Columns != 0 ? nextIndex : -1;
+            return IsValidIndex(nextIndex) && (FocusedIndex + 1) % _gridContainer.Columns != 0 ? nextIndex : -1;
         }
 
         int GetTopEndIndex()
         {
-            if (CurrentOptionMode.HasFlag(OptionMode.All) && !IsSingleRow && !AllSelected)
+            if (CurrentOptionMode.HasFlag(OptionMode.All) && !AllSelected || !CurrentOptionMode.HasFlag(OptionMode.Single))
                 return -1;
-            return currentIndex % _gridContainer.Columns;
+            return FocusedIndex % _gridContainer.Columns;
         }
 
         int GetBottomEndIndex()
         {
-            if (CurrentOptionMode.HasFlag(OptionMode.All) && !IsSingleRow && !AllSelected)
+            if (CurrentOptionMode.HasFlag(OptionMode.All) && !AllSelected || !CurrentOptionMode.HasFlag(OptionMode.Single))
                 return -1;
-            int firstRowAdjIndex = currentIndex % _gridContainer.Columns;
+            int firstRowAdjIndex = FocusedIndex % _gridContainer.Columns;
             int lastIndex = OptionItems.Count - 1;
             int lastRowFirstIndex = lastIndex / _gridContainer.Columns * _gridContainer.Columns;
             return Math.Min(lastRowFirstIndex + firstRowAdjIndex, lastIndex);
@@ -156,24 +156,24 @@ public partial class GridOptionContainer : OptionContainer
         {
             if (IsSingleRow)
             {
-                if (CurrentOptionMode.HasFlag(OptionMode.All) && !AllSelected)
+                if (CurrentOptionMode.HasFlag(OptionMode.All) && !AllSelected || !CurrentOptionMode.HasFlag(OptionMode.Single))
                     return -1;
                 else
                     return 0;
             }
-            return currentIndex / _gridContainer.Columns * _gridContainer.Columns;
+            return FocusedIndex / _gridContainer.Columns * _gridContainer.Columns;
         }
 
         int GetRightEndIndex()
         {
             if (IsSingleRow)
             {
-                if (CurrentOptionMode.HasFlag(OptionMode.All) && !AllSelected)
+                if (CurrentOptionMode.HasFlag(OptionMode.All) && !AllSelected || !CurrentOptionMode.HasFlag(OptionMode.Single))
                     return -1;
                 else
                     return OptionItems.Count - 1;
             }
-            return (((currentIndex / _gridContainer.Columns) + 1) * _gridContainer.Columns) - 1;
+            return (((FocusedIndex / _gridContainer.Columns) + 1) * _gridContainer.Columns) - 1;
         }
     }
 

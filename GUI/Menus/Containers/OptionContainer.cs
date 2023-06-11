@@ -12,7 +12,6 @@ public abstract partial class OptionContainer : MarginContainer
     public bool AllSelected { get; set; }
     [Export(PropertyHint.Flags)]
     public OptionMode CurrentOptionMode { get; set; } = OptionMode.Single;
-    public int PreviousIndex { get; protected set; }
     public int FocusedIndex { get; protected set; }
     public OptionItem? FocusedItem => OptionItems.ElementAtOrDefault(FocusedIndex);
     [Export] public bool MouseEnabled { get; set; } = true;
@@ -43,44 +42,43 @@ public abstract partial class OptionContainer : MarginContainer
     /// <param name="index"></param>
     public virtual void FocusContainer(int index)
     {
-        if (CurrentOptionMode.HasFlag(OptionMode.Single))
+        if (CurrentOptionMode == OptionMode.All)
         {
-            FocusItem(index);
+            if (!AllSelected)
+                SelectAll();
+            index = -1;
         }
-        else if (CurrentOptionMode == OptionMode.All)
-        {
-            SelectAll();
-        }
+
+        FocusItem(index);
     }
 
+    /// <summary>
+    /// Focuses the item specified.
+    /// <para>Updates the previous index. Removes focus from previous item.<br/>
+    /// Invokes the "ItemFocused" event.
+    /// </para>
+    /// </summary>
+    /// <param name="index"></param>
     public void FocusItem(OptionItem item)
     {
         int index = OptionItems.IndexOf(item);
-        if (index == -1)
-            return;
         FocusItem(index);
     }
 
     /// <summary>
     /// Focuses the item with the index specified.
-    /// <para>If only able to select all options, the index for "all" will be selected.<br/>
-    /// Updates the previous index. Removes focus from previous item.<br/>
-    /// Updates the scroll position. <br/>
-    /// If "all" is to be focused, all selectable items will be flagged as "selected".<br/>
-    /// If the previous item was "all", all selectable items have their "selected" flag removed.<br/>
+    /// <para>Updates the previous index. Removes focus from previous item.<br/>
     /// Invokes the "ItemFocused" event.
     /// </para>
     /// </summary>
     /// <param name="index"></param>
     public void FocusItem(int index)
     {
-        if (PreviousIndex != FocusedIndex)
-            PreviousIndex = FocusedIndex;
-        if (OptionItems.Count == 0)
-            return;
         if (FocusedItem != null)
             FocusedItem.Focused = false;
-        FocusedIndex = GetValidIndex(index);
+        FocusedIndex = OptionItems.Count == 0 ? -1 : index;
+        if (index == -1)
+            return;
         if (FocusedItem != null)
             FocusedItem.Focused = true;
         ItemFocused?.Invoke(this, FocusedItem);
@@ -112,11 +110,6 @@ public abstract partial class OptionContainer : MarginContainer
         ClearOptionItems();
         foreach (OptionItem item in optionItems)
             AddOption(item);
-    }
-
-    protected int GetValidIndex(int index)
-    {
-        return Math.Clamp(index, 0, OptionItems.Count - 1);
     }
 
     protected bool IsValidIndex(int index) => -1 < index && index < OptionItems.Count;
@@ -178,7 +171,7 @@ public abstract partial class OptionContainer : MarginContainer
 
         if (Overlay == null)
         {
-            Overlay = new();
+            Overlay = new() { MouseFilter = MouseFilterEnum.Ignore };
             AddChild(Overlay);
         }
 

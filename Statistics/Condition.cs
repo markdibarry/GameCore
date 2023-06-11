@@ -25,10 +25,9 @@ public abstract partial class Condition : Resource
         AdditionalCondition = additionalCondition?.Clone();
     }
 
-    private WeakReference _statsInternal = null!;
     public abstract int ConditionType { get; }
     [Export]
-    public ConditionResultType ResultType { get; set; }
+    public ConditionResultType ResultType { get; set; } = ConditionResultType.Remove;
     [Export]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     [JsonConverter(typeof(ConditionConverter))]
@@ -37,63 +36,46 @@ public abstract partial class Condition : Resource
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public LogicOp AdditionalLogicOp { get; set; }
     protected bool ConditionMet { get; set; }
-    protected virtual BaseStats Stats => (BaseStats)_statsInternal.Target!;
-    protected WeakReference? ConditionChangedCallback { get; set; }
+    public WeakReference<Action<Condition>?>? StatusChangedDelegate { get; set; }
+    public WeakReference<Action<Condition>?>? UpdatedDelegate { get; set; }
 
-    public void SetStats(BaseStats stats)
+    public bool CheckIfConditionsMet(BaseStats stats)
     {
-        _statsInternal = new(stats);
-        AdditionalCondition?.SetStats(stats);
-    }
-
-    public bool CheckConditions()
-    {
-        ConditionMet = CheckCondition();
+        ConditionMet = CheckIfConditionMet(stats);
         if (ConditionMet)
         {
             if (AdditionalCondition?.AdditionalLogicOp == LogicOp.And)
-                return AdditionalCondition.CheckConditions();
+                return AdditionalCondition.CheckIfConditionsMet(stats);
             return true;
         }
         else
         {
             if (AdditionalCondition?.AdditionalLogicOp == LogicOp.Or)
-                return AdditionalCondition.CheckConditions();
+                return AdditionalCondition.CheckIfConditionsMet(stats);
             return false;
         }
     }
 
-    public virtual void Reset()
-    {
-        AdditionalCondition?.Reset();
-    }
+    public virtual void Reset() => AdditionalCondition?.Reset();
 
-    public void Subscribe(Action handler)
+    public void UpdateCondition(BaseStats stats)
     {
-        SubscribeEvents();
-        ConditionChangedCallback = new(handler);
-        AdditionalCondition?.Subscribe(handler);
-    }
-
-    public void Unsubscribe()
-    {
-        UnsubscribeEvents();
-        ConditionChangedCallback = null;
-        AdditionalCondition?.Unsubscribe();
-    }
-
-    protected void UpdateCondition()
-    {
-        bool result = CheckCondition();
+        bool result = CheckIfConditionMet(stats);
         if (result != ConditionMet)
         {
             ConditionMet = result;
-            (ConditionChangedCallback?.Target as Action)?.Invoke();
+            if (StatusChangedDelegate != null && StatusChangedDelegate.TryGetTarget(out Action<Condition>? target))
+                target?.Invoke(this);
         }
     }
 
     public abstract Condition Clone();
-    protected abstract bool CheckCondition();
-    protected abstract void SubscribeEvents();
-    protected abstract void UnsubscribeEvents();
+    public abstract void SubscribeEvents(BaseStats stats);
+    public abstract void UnsubscribeEvents(BaseStats stats);
+    protected abstract bool CheckIfConditionMet(BaseStats stats);
+    protected void RaiseConditionUpdated()
+    {
+        if (UpdatedDelegate != null && UpdatedDelegate.TryGetTarget(out Action<Condition>? target))
+            target.Invoke(this);
+    }
 }

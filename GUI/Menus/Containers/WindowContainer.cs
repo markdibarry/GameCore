@@ -51,12 +51,6 @@ public partial class WindowContainer : MarginContainer
             FlipH = true
         };
 
-        _arrows.AddChild(_arrowUp);
-        _arrows.AddChild(_arrowDown);
-        _arrows.AddChild(_arrowLeft);
-        _arrows.AddChild(_arrowRight);
-        AddChild(_arrows);
-
         _scrollBars = new()
         {
             Visible = false,
@@ -83,12 +77,7 @@ public partial class WindowContainer : MarginContainer
             MouseFilter = MouseFilterEnum.Stop,
             MouseForcePassScrollEvents = false
         };
-
         _vScrollBar.SetAnchorsPreset(LayoutPreset.RightWide);
-        _scrollBars.AddChild(_hScrollBar);
-        _scrollBars.AddChild(_vScrollBar);
-        AddChild(_scrollBars);
-
         ScrollBarEnabled = _scrollBarEnabled;
     }
 
@@ -303,7 +292,7 @@ public partial class WindowContainer : MarginContainer
         if (control is OptionContainer optionContainer)
         {
             optionContainer.ItemFocused += OnItemFocused;
-            _overlay = new();
+            _overlay = new() { MouseFilter = MouseFilterEnum.Ignore };
             AddChild(_overlay);
             optionContainer.Overlay = _overlay;
         }
@@ -399,6 +388,14 @@ public partial class WindowContainer : MarginContainer
 
     private void SetNodeReferences()
     {
+        _arrows.AddChild(_arrowUp);
+        _arrows.AddChild(_arrowDown);
+        _arrows.AddChild(_arrowLeft);
+        _arrows.AddChild(_arrowRight);
+        AddChild(_arrows);
+        _scrollBars.AddChild(_hScrollBar);
+        _scrollBars.AddChild(_vScrollBar);
+        AddChild(_scrollBars);
         ClipContainer = GetNode<Container>("ClipContainer");
         Godot.Collections.Array<Node> children = ClipContainer.GetChildren();
         if (children.Count == 1 && children[0] is Control control)

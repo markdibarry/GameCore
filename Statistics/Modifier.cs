@@ -39,6 +39,11 @@ public partial class Modifier : Resource
     }
 
     private int _statType;
+    [Export] public bool IsHidden { get; set; }
+    [Export] public ModOp Op { get; set; }
+    [Export] public SourceType SourceType { get; set; }
+    [Export] public Godot.Collections.Array<Condition> Conditions { get; set; } = new();
+    public bool IsActive { get; set; }
     public int StatType
     {
         get => _statType;
@@ -49,91 +54,71 @@ public partial class Modifier : Resource
         }
     }
     public int Value { get; set; }
-    [Export] public bool IsHidden { get; set; }
-    [Export] public ModOp Op { get; set; }
-    [Export] public SourceType SourceType { get; set; }
-    [Export] public Godot.Collections.Array<Condition> Conditions { get; set; } = new();
-    public bool IsActive { get; set; }
-    [JsonIgnore] public Action<Modifier>? RemovalConditionMetCallback { get; set; }
-    [JsonIgnore] public Action<Modifier>? ActivationConditionMetCallback { get; set; }
+    public event Action<Condition>? ConditionUpdated;
+    public event Action<Modifier, Condition>? ConditionChanged;
 
     // TODO Add special case handling i.e. +5% for every 100 enemies killed
     public int Apply(int baseValue) => Op.Compute(baseValue, Value);
 
-    public void InitConditions(BaseStats stats)
+    public bool IsConditionRemovable(Condition condition)
     {
-        foreach (Condition condition in Conditions)
-            condition.SetStats(stats);
+        return condition.ResultType == ConditionResultType.Remove ||
+            (condition.ResultType.HasFlag(ConditionResultType.Remove) && SourceType == SourceType.Independent);
     }
 
     public void ResetConditions()
     {
-        if (Conditions == null)
-            return;
         foreach (Condition condition in Conditions)
             condition.Reset();
     }
 
-    public bool ShouldDeactivate() => CheckConditions(ConditionResultType.Deactivate);
-
-    public bool ShouldRemove() => CheckConditions(ConditionResultType.Remove);
-
-    public void SubscribeConditions(Action<Modifier> activationCallback, Action<Modifier> removalCallback)
+    public bool ShouldDeactivate(BaseStats stats)
     {
-        ActivationConditionMetCallback = activationCallback;
-        RemovalConditionMetCallback = removalCallback;
-        foreach (Condition condition in Conditions)
-            condition.Subscribe(GetHandler(condition));
+        return Conditions.Any(x => x.ResultType.HasFlag(ConditionResultType.Deactivate) && x.CheckIfConditionsMet(stats));
     }
 
-    public void UnsubscribeConditions()
+    public bool ShouldRemove(BaseStats stats)
     {
-        ActivationConditionMetCallback = null;
-        RemovalConditionMetCallback = null;
-        foreach (Condition condition in Conditions)
-            condition.Unsubscribe();
+        return Conditions.Any(x => x.ResultType.HasFlag(ConditionResultType.Remove) && x.CheckIfConditionsMet(stats));
     }
 
-    private bool CheckConditions(ConditionResultType resultType)
+    public void SubscribeConditions(BaseStats stats)
     {
         foreach (Condition condition in Conditions)
         {
-            if (condition.ResultType != ConditionResultType.RemoveOrDeactivate && condition.ResultType != resultType)
-                continue;
-            if (condition.CheckConditions())
-                return true;
-        }
-        return false;
-    }
-
-    private void ConditionActivationHandler()
-    {
-        bool isActive = !ShouldDeactivate();
-        if (IsActive != isActive)
-        {
-            IsActive = isActive;
-            ActivationConditionMetCallback?.Invoke(this);
+            Condition? nextCondition = condition;
+            while (nextCondition != null)
+            {
+                nextCondition.SubscribeEvents(stats);
+                nextCondition.UpdatedDelegate = new(OnConditionUpdated);
+                nextCondition.StatusChangedDelegate = new(OnConditionChanged);
+                nextCondition = nextCondition.AdditionalCondition;
+            }
         }
     }
 
-    private void ConditionRemovalHandler()
+    public void UnsubscribeConditions(BaseStats stats)
     {
-        if (ShouldRemove())
-            RemovalConditionMetCallback?.Invoke(this);
-    }
-
-    private Action GetHandler(Condition condition)
-    {
-        return condition.ResultType switch
+        foreach (Condition condition in Conditions)
         {
-            ConditionResultType.Remove => ConditionRemovalHandler,
-            ConditionResultType.Deactivate => ConditionActivationHandler,
-            _ => SourceType == SourceType.Independent ? ConditionRemovalHandler : ConditionActivationHandler
-        };
+            Condition? nextCondition = condition;
+            while (nextCondition != null)
+            {
+                nextCondition.UnsubscribeEvents(stats);
+                nextCondition.UpdatedDelegate = null;
+                nextCondition.StatusChangedDelegate = null;
+                nextCondition = nextCondition.AdditionalCondition;
+            }
+        }
     }
 
     public override Godot.Collections.Array<Gictionary> _GetPropertyList()
     {
         return StatsLocator.StatTypeDB.GetStatPropertyList(_statType);
     }
+
+    private void OnConditionUpdated(Condition condition) => ConditionUpdated?.Invoke(condition);
+
+    private void OnConditionChanged(Condition condition) => ConditionChanged?.Invoke(this, condition);
+
 }
