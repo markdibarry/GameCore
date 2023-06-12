@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-using Arenbee.Statistics;
+using GameCore.Items;
 using GameCore.Utility;
 
 namespace GameCore.Statistics;
@@ -13,11 +13,11 @@ public abstract class BaseStats
     {
         StatsOwner = damageable;
         DamageToProcess = new();
-        Modifiers = new();
+        ModifierRefs = new();
         StatusEffects = new();
         StatLookup = statLookup.ToDictionary(x => x.StatType, x => new Stat(x));
         foreach (Modifier modifier in mods)
-            AddMod(new(modifier));
+            AddMod(modifier);
     }
 
     /// <summary>
@@ -29,17 +29,16 @@ public abstract class BaseStats
     {
         foreach (KeyValuePair<int, Stat> pair in stats.StatLookup)
             StatLookup[pair.Key] = new(pair.Value);
-        foreach (KeyValuePair<int, List<Modifier>> pair in stats.Modifiers)
-            Modifiers[pair.Key] = pair.Value.ToList();
+        foreach (KeyValuePair<int, List<ModifierRef>> pair in stats.ModifierRefs)
+            ModifierRefs[pair.Key] = pair.Value.ToList();
     }
 
     [JsonIgnore]
     public Queue<IDamageRequest> DamageToProcess { get; }
     public IDamageResult? CurrentDamageResult { get; private set; }
-    [JsonConverter(typeof(ModifierLookupConverter))]
     public Dictionary<int, Stat> StatLookup { get; }
     public IDamageable StatsOwner { get; }
-    protected Dictionary<int, List<Modifier>> Modifiers { get; }
+    protected Dictionary<int, List<ModifierRef>> ModifierRefs { get; }
     protected List<IStatusEffect> StatusEffects { get; }
     protected static IStatusEffectDB StatusEffectDB { get; } = StatsLocator.StatusEffectDB;
     public event Action<IDamageResult>? DamageReceived;
@@ -48,25 +47,26 @@ public abstract class BaseStats
     public event Action? StatChanged;
     public event Action<int, ModChangeType>? StatusEffectChanged;
 
-    public virtual void AddMod(Modifier mod)
+    public virtual void AddMod(Modifier mod, object? source = null)
     {
-        if (mod.SourceType == SourceType.Independent && mod.ShouldRemove(this))
+        if (source == null && Condition.ShouldRemove(this, mod.Conditions))
             return;
-        List<Modifier> mods = Modifiers.GetOrAddNew(mod.StatType);
+        List<ModifierRef> modRefs = ModifierRefs.GetOrAddNew(mod.StatType);
 
         // Reset existing independent mod if already exists
-        if (mod.SourceType == SourceType.Independent && mods.Any(x => x.SourceType == SourceType.Independent))
+        if (source == null && modRefs.Any(x => x.Source == null))
         {
-            Modifier existingTempMod = mods.First(x => x.SourceType == SourceType.Independent);
+            ModifierRef existingTempMod = modRefs.First(x => x.Source == null);
             existingTempMod.ResetConditions();
             return;
         }
 
-        mods.Add(mod);
-        mod.IsActive = !mod.ShouldDeactivate(this);
-        mod.ConditionUpdated += OnConditionUpdated;
-        mod.ConditionChanged += OnConditionChanged;
-        mod.SubscribeConditions(this);
+        ModifierRef modRef = new(mod, source);
+        modRefs.Add(modRef);
+        modRef.IsActive = !modRef.ShouldDeactivate(this);
+        modRef.ConditionUpdated += OnConditionUpdated;
+        modRef.ConditionChanged += OnConditionChanged;
+        modRef.SubscribeConditions(this);
         UpdateSpecialCategory(mod.StatType);
         RaiseModChanged(mod, ModChangeType.Add);
     }
@@ -81,26 +81,25 @@ public abstract class BaseStats
         return statLookup;
     }
 
-    public List<Modifier> GetModifiers(bool ignoreDependentMods = false)
+    public List<ModifierRef> GetModifiers(bool ignoreDependentMods = false)
     {
-        List<Modifier> mods = new();
+        List<ModifierRef> modRefs = new();
 
         if (ignoreDependentMods)
         {
-            foreach (KeyValuePair<int, List<Modifier>> pair in Modifiers)
-                mods.AddRange(pair.Value
-                    .Where(x => x.SourceType != (int)SourceType.Dependent));
-            return mods;
+            foreach (KeyValuePair<int, List<ModifierRef>> pair in ModifierRefs)
+                modRefs.AddRange(pair.Value.Where(x => x.Source != null));
+            return modRefs;
         }
 
-        foreach (KeyValuePair<int, List<Modifier>> pair in Modifiers)
-            mods.AddRange(pair.Value);
-        return mods;
+        foreach (KeyValuePair<int, List<ModifierRef>> pair in ModifierRefs)
+            modRefs.AddRange(pair.Value);
+        return modRefs;
     }
 
-    public IReadOnlyCollection<Modifier> GetModifiersByType(int statType)
+    public IReadOnlyCollection<ModifierRef> GetModifiersByType(int statType)
     {
-        return Modifiers.TryGetValue(statType, out List<Modifier>? mod) ? mod : Array.Empty<Modifier>();
+        return ModifierRefs.TryGetValue(statType, out List<ModifierRef>? mod) ? mod : Array.Empty<ModifierRef>();
     }
 
     public Stat? GetStat(int statType) => StatLookup.TryGetValue(statType, out Stat? stat) ? stat : default;
@@ -124,16 +123,26 @@ public abstract class BaseStats
         DamageToProcess.Enqueue(damageRequest);
     }
 
-    public virtual void RemoveMod(Modifier mod)
+    public virtual void RemoveMod(ModifierRef modRef, object? source = null) => RemoveMod(modRef.Modifier, source);
+
+    public virtual void RemoveMod(Modifier mod, object? source = null, bool unsubscribe = true)
     {
-        if (!Modifiers.TryGetValue(mod.StatType, out List<Modifier>? mods) || !mods.Contains(mod))
+        if (!ModifierRefs.TryGetValue(mod.StatType, out List<ModifierRef>? modRefs))
             return;
-        mod.ConditionUpdated -= OnConditionUpdated;
-        mod.ConditionChanged -= OnConditionChanged;
-        mod.UnsubscribeConditions(this);
-        mods.Remove(mod);
-        if (mods.Count == 0)
-            Modifiers.Remove(mod.StatType);
+        ModifierRef? modRef = modRefs.FirstOrDefault(x => x.Modifier == mod && x.Source == source);
+        if (modRef == null)
+            return;
+
+        if (unsubscribe)
+        {
+            modRef.ConditionUpdated -= OnConditionUpdated;
+            modRef.ConditionChanged -= OnConditionChanged;
+            modRef.UnsubscribeConditions(this);
+        }
+
+        modRefs.Remove(modRef);
+        if (modRefs.Count == 0)
+            ModifierRefs.Remove(mod.StatType);
         UpdateSpecialCategory(mod.StatType);
         RaiseModChanged(mod, ModChangeType.Remove);
     }
@@ -179,20 +188,20 @@ public abstract class BaseStats
 
     private void OnConditionUpdated(Condition condition) => condition.UpdateCondition(this);
 
-    private void OnConditionChanged(Modifier mod, Condition condition)
+    private void OnConditionChanged(ModifierRef modRef, Condition condition)
     {
-        if (mod.IsConditionRemovable(condition))
+        if (modRef.IsConditionRemovable(condition))
         {
-            if (mod.ShouldRemove(this))
-                RemoveMod(mod);
+            if (modRef.ShouldRemove(this))
+                RemoveMod(modRef);
         }
         else
         {
-            bool isActive = !mod.ShouldDeactivate(this);
-            if (mod.IsActive != isActive)
+            bool isActive = !modRef.ShouldDeactivate(this);
+            if (modRef.IsActive != isActive)
             {
-                mod.IsActive = isActive;
-                UpdateSpecialCategory(mod.StatType);
+                modRef.IsActive = isActive;
+                UpdateSpecialCategory(modRef.Modifier.StatType);
             }
         }
     }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using Godot;
 
@@ -36,8 +38,18 @@ public abstract partial class Condition : Resource
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public LogicOp AdditionalLogicOp { get; set; }
     protected bool ConditionMet { get; set; }
-    public WeakReference<Action<Condition>?>? StatusChangedDelegate { get; set; }
-    public WeakReference<Action<Condition>?>? UpdatedDelegate { get; set; }
+    public event Action<Condition>? StatusChanged;
+    public event Action<Condition>? Updated;
+
+    public static bool ShouldDeactivate(BaseStats stats, IEnumerable<Condition> conditions)
+    {
+        return conditions.Any(x => x.ResultType.HasFlag(ConditionResultType.Deactivate) && x.CheckIfConditionsMet(stats));
+    }
+
+    public static bool ShouldRemove(BaseStats stats, IEnumerable<Condition> conditions)
+    {
+        return conditions.Any(x => x.ResultType.HasFlag(ConditionResultType.Remove) && x.CheckIfConditionsMet(stats));
+    }
 
     public bool CheckIfConditionsMet(BaseStats stats)
     {
@@ -64,8 +76,7 @@ public abstract partial class Condition : Resource
         if (result != ConditionMet)
         {
             ConditionMet = result;
-            if (StatusChangedDelegate != null && StatusChangedDelegate.TryGetTarget(out Action<Condition>? target))
-                target?.Invoke(this);
+            StatusChanged?.Invoke(this);
         }
     }
 
@@ -73,9 +84,5 @@ public abstract partial class Condition : Resource
     public abstract void SubscribeEvents(BaseStats stats);
     public abstract void UnsubscribeEvents(BaseStats stats);
     protected abstract bool CheckIfConditionMet(BaseStats stats);
-    protected void RaiseConditionUpdated()
-    {
-        if (UpdatedDelegate != null && UpdatedDelegate.TryGetTarget(out Action<Condition>? target))
-            target.Invoke(this);
-    }
+    protected void RaiseConditionUpdated() => Updated?.Invoke(this);
 }
