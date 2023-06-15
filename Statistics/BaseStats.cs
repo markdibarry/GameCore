@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-using GameCore.Items;
 using GameCore.Utility;
 
 namespace GameCore.Statistics;
@@ -15,7 +14,9 @@ public abstract class BaseStats
         DamageToProcess = new();
         ModifierRefs = new();
         StatusEffects = new();
-        StatLookup = statLookup.ToDictionary(x => x.StatType, x => new Stat(x));
+        StatLookup = statLookup.ToDictionary(
+            x => x.StatType,
+            x => new Stat(x));
         foreach (Modifier modifier in mods)
             AddMod(modifier);
     }
@@ -27,10 +28,14 @@ public abstract class BaseStats
     protected BaseStats(BaseStats stats)
         : this(null!, Array.Empty<Stat>(), Array.Empty<Modifier>())
     {
-        foreach (KeyValuePair<int, Stat> pair in stats.StatLookup)
-            StatLookup[pair.Key] = new(pair.Value);
+        StatLookup = stats.StatLookup.ToDictionary(
+            x => x.Key,
+            x => new Stat(x.Value));
         foreach (KeyValuePair<int, List<ModifierRef>> pair in stats.ModifierRefs)
-            ModifierRefs[pair.Key] = pair.Value.ToList();
+        {
+            foreach (ModifierRef modRef in pair.Value)
+                AddMod(modRef.Modifier, modRef.Source);
+        }
     }
 
     [JsonIgnore]
@@ -49,7 +54,7 @@ public abstract class BaseStats
 
     public virtual void AddMod(Modifier mod, object? source = null)
     {
-        if (source == null && Condition.ShouldRemove(this, mod.Conditions))
+        if (source == null && Modifier.ShouldRemove(this, mod.Conditions))
             return;
         List<ModifierRef> modRefs = ModifierRefs.GetOrAddNew(mod.StatType);
 
@@ -72,14 +77,6 @@ public abstract class BaseStats
     }
 
     public abstract int CalculateStat(int statType, bool ignoreHidden = false);
-
-    public Dictionary<int, Stat> CloneStatLookup()
-    {
-        Dictionary<int, Stat> statLookup = new();
-        foreach (var pair in StatLookup)
-            statLookup[pair.Key] = new Stat(pair.Value);
-        return statLookup;
-    }
 
     public List<ModifierRef> GetModifiers(bool ignoreDependentMods = false)
     {
@@ -125,7 +122,7 @@ public abstract class BaseStats
 
     public virtual void RemoveMod(ModifierRef modRef, object? source = null) => RemoveMod(modRef.Modifier, source);
 
-    public virtual void RemoveMod(Modifier mod, object? source = null, bool unsubscribe = true)
+    public virtual void RemoveMod(Modifier mod, object? source = null)
     {
         if (!ModifierRefs.TryGetValue(mod.StatType, out List<ModifierRef>? modRefs))
             return;
@@ -133,12 +130,9 @@ public abstract class BaseStats
         if (modRef == null)
             return;
 
-        if (unsubscribe)
-        {
-            modRef.ConditionUpdated -= OnConditionUpdated;
-            modRef.ConditionChanged -= OnConditionChanged;
-            modRef.UnsubscribeConditions(this);
-        }
+        modRef.ConditionUpdated -= OnConditionUpdated;
+        modRef.ConditionChanged -= OnConditionChanged;
+        modRef.UnsubscribeConditions(this);
 
         modRefs.Remove(modRef);
         if (modRefs.Count == 0)
@@ -190,7 +184,7 @@ public abstract class BaseStats
 
     private void OnConditionChanged(ModifierRef modRef, Condition condition)
     {
-        if (modRef.IsConditionRemovable(condition))
+        if (modRef.IsRemovable(condition))
         {
             if (modRef.ShouldRemove(this))
                 RemoveMod(modRef);

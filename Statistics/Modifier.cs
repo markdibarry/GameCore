@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using Godot;
 using Gictionary = Godot.Collections.Dictionary;
@@ -62,6 +63,16 @@ public partial class Modifier : Resource
 
     // TODO Add special case handling i.e. +5% for every 100 enemies killed
     public int Apply(int baseValue) => Op.Compute(baseValue, Value);
+
+    public static bool ShouldDeactivate(BaseStats stats, IEnumerable<Condition> conditions)
+    {
+        return conditions.Any(x => x.ResultType.HasFlag(ConditionResultType.Deactivate) && x.CheckIfConditionsMet(stats));
+    }
+
+    public static bool ShouldRemove(BaseStats stats, IEnumerable<Condition> conditions)
+    {
+        return conditions.Any(x => x.ResultType.HasFlag(ConditionResultType.Remove) && x.CheckIfConditionsMet(stats));
+    }
 
     public override Godot.Collections.Array<Gictionary> _GetPropertyList()
     {

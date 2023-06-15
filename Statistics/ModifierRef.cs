@@ -7,16 +7,24 @@ namespace GameCore.Statistics;
 public class ModifierRef
 {
     public ModifierRef(Modifier mod, object? source = null)
+        : this(mod, mod.Conditions, source)
+    { }
+
+    public ModifierRef(ModifierRef modRef)
+    : this(modRef.Modifier, modRef.Conditions, modRef.Source)
+    { }
+
+    public ModifierRef(Modifier mod, IEnumerable<Condition> conditions, object? source = null)
     {
         Modifier = mod;
-        Conditions = mod.Conditions.Select(x => x.Clone()).ToList();
+        Conditions = conditions.Select(x => x.Clone()).ToList();
         Source = source;
     }
 
-    public Modifier Modifier { get; }
     public List<Condition> Conditions { get; }
     public bool IsActive { get; set; }
     public bool IsHidden => Modifier.IsHidden;
+    public Modifier Modifier { get; }
     public ModOp Op => Modifier.Op;
     public object? Source { get; }
     public int Value => Modifier.Value;
@@ -26,7 +34,7 @@ public class ModifierRef
     // TODO Add special case handling i.e. +5% for every 100 enemies killed
     public int Apply(int baseValue) => Modifier.Apply(baseValue);
 
-    public bool IsConditionRemovable(Condition condition)
+    public bool IsRemovable(Condition condition)
     {
         return condition.ResultType == ConditionResultType.Remove ||
             (condition.ResultType.HasFlag(ConditionResultType.Remove) && Source == null);
@@ -38,9 +46,9 @@ public class ModifierRef
             condition.Reset();
     }
 
-    public bool ShouldDeactivate(BaseStats stats) => Condition.ShouldDeactivate(stats, Conditions);
+    public bool ShouldDeactivate(BaseStats stats) => Modifier.ShouldDeactivate(stats, Conditions);
 
-    public bool ShouldRemove(BaseStats stats) => Condition.ShouldRemove(stats, Conditions);
+    public bool ShouldRemove(BaseStats stats) => Modifier.ShouldRemove(stats, Conditions);
 
     public void SubscribeConditions(BaseStats stats)
     {

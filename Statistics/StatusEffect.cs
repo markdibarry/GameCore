@@ -30,8 +30,8 @@ public class StatusEffect : IStatusEffect
         while (nextCondition != null)
         {
             nextCondition.SubscribeEvents(stats);
-            nextCondition.UpdatedDelegate = new(OnConditionUpdated);
-            nextCondition.StatusChangedDelegate = new(OnConditionChanged);
+            nextCondition.Updated += OnConditionUpdated;
+            nextCondition.StatusChanged += OnConditionChanged;
             nextCondition = nextCondition.AdditionalCondition;
         }
     }
@@ -42,8 +42,8 @@ public class StatusEffect : IStatusEffect
         while (nextCondition != null)
         {
             nextCondition.UnsubscribeEvents(stats);
-            nextCondition.UpdatedDelegate = null;
-            nextCondition.StatusChangedDelegate = null;
+            nextCondition.Updated -= OnConditionUpdated;
+            nextCondition.StatusChanged -= OnConditionChanged;
             nextCondition = nextCondition.AdditionalCondition;
         }
     }

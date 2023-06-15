@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json.Serialization;
 using Godot;
 
@@ -40,16 +38,6 @@ public abstract partial class Condition : Resource
     protected bool ConditionMet { get; set; }
     public event Action<Condition>? StatusChanged;
     public event Action<Condition>? Updated;
-
-    public static bool ShouldDeactivate(BaseStats stats, IEnumerable<Condition> conditions)
-    {
-        return conditions.Any(x => x.ResultType.HasFlag(ConditionResultType.Deactivate) && x.CheckIfConditionsMet(stats));
-    }
-
-    public static bool ShouldRemove(BaseStats stats, IEnumerable<Condition> conditions)
-    {
-        return conditions.Any(x => x.ResultType.HasFlag(ConditionResultType.Remove) && x.CheckIfConditionsMet(stats));
-    }
 
     public bool CheckIfConditionsMet(BaseStats stats)
     {
