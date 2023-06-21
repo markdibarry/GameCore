@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using GameCore.Utility;
 using Godot;
 
 namespace GameCore.GUI;
 
 [Tool]
-public partial class DynamicText : RichTextLabel
+public partial class DynamicText : RichTextLabel, IEventParser
 {
     public DynamicText()
     {
@@ -28,7 +27,8 @@ public partial class DynamicText : RichTextLabel
     private double _speed = 0.02;
     private double _speedMultiplier = 1;
     private bool _textDirty;
-    private List<TextEvent> _textEvents = new();
+    private List<ITextEvent> _textEvents = new();
+    private int _textEventIndex;
     private bool _writeTextEnabled;
     [Export]
     public int CurrentLine
@@ -186,10 +186,7 @@ public partial class DynamicText : RichTextLabel
     {
         CurrentState = State.Loading;
         LoadingStarted?.Invoke();
-        VisibleCharacters = 0;
-        Text = dialogLine.Text;
-        Text = dialogLine.GetEventParsedText(GetParsedText(), _textEvents);
-        UpdateTextData();
+        ParseAndAssignText(dialogLine.Text, dialogLine, _textEvents);
         CurrentState = State.Idle;
         TextUpdated?.Invoke();
     }
@@ -217,6 +214,13 @@ public partial class DynamicText : RichTextLabel
         return line < LineCount ? GetLineOffset(line) : ContentHeight;
     }
 
+    private ITextEvent? GetNextTextEvent()
+    {
+        if (_textEventIndex >= _textEvents.Count)
+            return null;
+        return _textEvents[_textEventIndex];
+    }
+
     private void HandleSizeDirty()
     {
         UpdateTextData();
@@ -229,11 +233,7 @@ public partial class DynamicText : RichTextLabel
         CurrentState = State.Loading;
         LoadingStarted?.Invoke();
         _textEvents = new();
-        VisibleCharacters = 0;
-        // Assign to parse BBCode (stupid. I know.)
-        Text = _customText;
-        Text = GetEventParsedText(_customText, Text, _textEvents);
-        UpdateTextData();
+        ParseAndAssignText(_customText, this, _textEvents);
         CurrentState = writeQueued ? State.Writing : State.Idle;
         TextUpdated?.Invoke();
         _textDirty = false;
@@ -265,13 +265,25 @@ public partial class DynamicText : RichTextLabel
         ResetVisibleCharacters();
     }
 
+    private void ParseAndAssignText(string fullText, IEventParser parser, List<ITextEvent> textEvents)
+    {
+        VisibleCharacters = 0;
+        // Assign to parse BBCode (stupid. I know.)
+        Text = fullText;
+        Text = parser.GetEventParsedText(fullText, GetParsedText(), textEvents);
+        UpdateTextData();
+    }
+
     private void RaiseTextEvents()
     {
-        IEnumerable<TextEvent> textEvents = _textEvents.Where(x => !x.Seen && x.Index <= VisibleCharacters);
-        foreach (TextEvent textEvent in textEvents)
+        ITextEvent? textEvent = GetNextTextEvent();
+        while (textEvent != null && textEvent.Index <= VisibleCharacters)
         {
+            // TODO: Handle Seen
             textEvent.Seen = true;
             HandleTextEvent(textEvent);
+            _textEventIndex++;
+            textEvent = GetNextTextEvent();
         }
     }
 
@@ -308,5 +320,17 @@ public partial class DynamicText : RichTextLabel
         VisibleCharacters++;
         Counter = VisibleCharacters < EndChar ? Speed : 0;
         RaiseTextEvents();
+
+
+        //Counter += delta * Speed;
+        //if (Counter > 0)
+        //{
+        //    int newChars = (int)Counter;
+        //    if (GetNextTextEvent() is TextEvent textEvent)
+        //        newChars = Math.Min(newChars, textEvent.Index - VisibleCharacters);
+        //    VisibleCharacters += SpeedUpEnabled ? newChars : 1;
+        //    Counter = VisibleCharacters < EndChar ? Counter % 1 : 0;
+        //    RaiseTextEvents();
+        //}
     }
 }

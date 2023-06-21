@@ -1,5 +1,5 @@
 ﻿using Godot;
-using Gictionary = Godot.Collections.Dictionary;
+using GCol = Godot.Collections;
 
 namespace GameCore.Statistics;
 
@@ -13,9 +13,9 @@ public interface IStatTypeDB
     /// </summary>
     /// <param name="statType"></param>
     /// <returns></returns>
-    public Godot.Collections.Array<Gictionary> GetStatPropertyList(int statType)
+    public GCol.Array<GCol.Dictionary> GetStatPropertyList(int statType)
     {
-        Godot.Collections.Array<Gictionary> properties = new();
+        GCol.Array<GCol.Dictionary> properties = new();
         string[]? valueOptions = GetValueEnumOptions(statType);
 
         properties.Add(new()
@@ -26,7 +26,7 @@ public interface IStatTypeDB
             { "hint", (int)PropertyHint.Enum },
             { "hint_string", GetTypeNames().Join(",") }
         });
-        Gictionary valueProp = new()
+        GCol.Dictionary valueProp = new()
         {
             { "name", "Value" },
             { "type", (int)Variant.Type.Int },

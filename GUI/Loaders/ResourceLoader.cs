@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using GCol = Godot.Collections;
+using RL = Godot.ResourceLoader;
 
 namespace GameCore.GUI;
 
@@ -10,23 +12,23 @@ public class ResourceLoader : ObjectLoader
 
     public override async Task<object?> LoadAsync()
     {
-        Godot.ResourceLoader.ThreadLoadStatus loadStatus;
-        Godot.Collections.Array loadProgress = new();
-        Godot.ResourceLoader.LoadThreadedRequest(Path);
+        RL.ThreadLoadStatus loadStatus;
+        GCol.Array loadProgress = new();
+        RL.LoadThreadedRequest(Path);
 
-        loadStatus = Godot.ResourceLoader.LoadThreadedGetStatus(Path, loadProgress);
+        loadStatus = RL.LoadThreadedGetStatus(Path, loadProgress);
         Progress = (int)((double)loadProgress[0] * 100);
         ReportProgress();
 
-        while (loadStatus == Godot.ResourceLoader.ThreadLoadStatus.InProgress)
+        while (loadStatus == RL.ThreadLoadStatus.InProgress)
         {
             await Task.Delay(100);
-            loadStatus = Godot.ResourceLoader.LoadThreadedGetStatus(Path, loadProgress);
+            loadStatus = RL.LoadThreadedGetStatus(Path, loadProgress);
             Progress = (int)((double)loadProgress[0] * 100);
             ReportProgress();
         }
-        if (loadStatus == Godot.ResourceLoader.ThreadLoadStatus.Loaded)
-            LoadedObject = Godot.ResourceLoader.LoadThreadedGet(Path);
+        if (loadStatus == RL.ThreadLoadStatus.Loaded)
+            LoadedObject = RL.LoadThreadedGet(Path);
         return LoadedObject;
     }
 }

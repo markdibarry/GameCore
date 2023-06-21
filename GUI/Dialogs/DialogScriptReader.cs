@@ -1,23 +1,23 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using GameCore.Utility;
 
 namespace GameCore.GUI;
 
 public class DialogScriptReader
 {
-    public DialogScriptReader(Dialog dialog, DialogBridgeRegister register, DialogScript dialogScript)
+    public DialogScriptReader(Dialog dialog, DialogScript dialogScript)
     {
         _dialog = dialog;
         _dialogScript = dialogScript;
         _speakers = _dialogScript.SpeakerIds.Select(id => new Speaker(id)).ToArray();
-        _interpreter = new(register, dialogScript, new());
     }
 
-    private readonly DialogInterpreter _interpreter;
     private readonly Dialog _dialog;
     private readonly DialogScript _dialogScript;
     private readonly Speaker[] _speakers;
+    private readonly IStorageContext _textStorage = new TextStorage();
     private bool _autoGlobal = false;
 
     public void Evaluate(ushort[] instructions)
@@ -63,7 +63,8 @@ public class DialogScriptReader
         async Task HandleLineStatement()
         {
             LineData lineData = _dialogScript.Lines[goTo.Index];
-            DialogLine line = new(_dialog, _interpreter, _dialogScript, lineData, _speakers, _autoGlobal);
+            string translatedText = _dialog.TrS(lineData.Text);
+            DialogLine line = new(_dialogScript, _textStorage, lineData, translatedText, _speakers, _autoGlobal);
             await _dialog.HandleLineAsync(line);
         }
 
@@ -76,71 +77,88 @@ public class DialogScriptReader
         {
             InstructionStatement instructionStmt = _dialogScript.InstructionStmts[goTo.Index];
             GoTo next = instructionStmt.Next;
+
             if (instructionStmt.Index != -1)
             {
                 next = EvaluateInstructions(_dialogScript.Instructions[instructionStmt.Index]);
+
                 if (next.Type == StatementType.Undefined)
                     next = instructionStmt.Next;
             }
+
             await ReadNextStatementAsync(next);
         }
 
         async Task HandleConditionalStatement()
         {
             InstructionStatement conditions = _dialogScript.InstructionStmts[goTo.Index];
-            ushort[] values = _dialogScript.Instructions[conditions.Index];
-            for (int i = 0; i < values.Length; i++)
+            ushort[] instValues = _dialogScript.Instructions[conditions.Index];
+
+            foreach (ushort instValue in instValues)
             {
-                InstructionStatement condition = _dialogScript.InstructionStmts[values[i]];
-                if (_interpreter.GetBoolInstResult(_dialogScript.Instructions[condition.Index]))
+                InstructionStatement condition = _dialogScript.InstructionStmts[instValue];
+                var enumerator = _dialogScript.Instructions[condition.Index].GetEnumerator<ushort>();
+
+                if (DialogInterpreter.GetBoolInstResult(_dialogScript, _textStorage, enumerator))
                 {
                     await ReadNextStatementAsync(condition.Next);
                     return;
                 }
             }
+
             await ReadNextStatementAsync(conditions.Next);
         }
 
         async Task HandleChoiceStatement()
         {
-            List<Choice> choices = new();
-            ushort[] choiceSet = _dialogScript.ChoiceSets[goTo.Index];
-            int validIndex = -1;
-            for (int i = 0; i < choiceSet.Length; i++)
+            await _dialog.OpenOptionBoxAsync(GetChoices());
+
+            List<Choice> GetChoices()
             {
-                if (i >= validIndex)
-                    validIndex = -1;
-                // If choice, add it!
-                if (choiceSet[i] == (ushort)OpCode.Choice)
+                List<Choice> choices = new();
+                ushort[] choiceSet = _dialogScript.ChoiceSets[goTo.Index];
+                int validIndex = -1;
+
+                for (int i = 0; i < choiceSet.Length; i++)
                 {
-                    Choice choice = _dialogScript.Choices[choiceSet[++i]];
-                    choice.Disabled = i < validIndex;
-                    choices.Add(choice);
-                }
-                // If GoTo, flag all choices as disabled until index
-                else if (choiceSet[i] == (ushort)OpCode.Goto)
-                {
-                    if (validIndex == -1)
-                        validIndex = choiceSet[++i];
-                    else
+                    if (i >= validIndex)
+                        validIndex = -1;
+
+                    // If choice, add it!
+                    if (choiceSet[i] == (ushort)OpCode.Choice)
+                    {
                         i++;
-                }
-                // Otherwise is a condition
-                else
-                {
+                        Choice choice = _dialogScript.Choices[choiceSet[i]];
+                        choice.Disabled = i < validIndex;
+                        choices.Add(choice);
+                        continue;
+                    }
+
+                    // If GoTo, flag all choices as disabled until index
+                    if (choiceSet[i] == (ushort)OpCode.Goto)
+                    {
+                        i++;
+                        if (validIndex == -1)
+                            validIndex = choiceSet[i];
+                        continue;
+                    }
+
+                    // Otherwise is a condition
                     if (i < validIndex)
                     {
                         i++;
+                        continue;
                     }
-                    else
-                    {
-                        ushort[] condition = _dialogScript.Instructions[choiceSet[i++]];
-                        if (!_interpreter.GetBoolInstResult(condition))
-                            validIndex = choiceSet[i];
-                    }
+
+                    i++;
+                    ushort[] condition = _dialogScript.Instructions[choiceSet[i]];
+                    IEnumerator<ushort> enumerator = condition.GetEnumerator<ushort>();
+
+                    if (!DialogInterpreter.GetBoolInstResult(_dialogScript, _textStorage, enumerator))
+                        validIndex = choiceSet[i];
                 }
-            }
-            await _dialog.OpenOptionBoxAsync(choices);
+                return choices;
+            };
         }
 
         async Task HandleEnd() => await _dialog.CloseDialogAsync();
@@ -175,19 +193,23 @@ public class DialogScriptReader
 
         void HandleEvaluate()
         {
-            switch (_interpreter.GetReturnType(instructions, 0))
+            var enumerator = instructions.GetEnumerator<ushort>();
+            VarType returnType = DialogInterpreter.GetReturnType(_dialogScript, _textStorage, enumerator);
+            enumerator.MoveNext();
+
+            switch (returnType)
             {
                 case VarType.String:
-                    _interpreter.GetStringInstResult(instructions);
+                    DialogInterpreter.GetStringInstResult(_dialogScript, _textStorage, enumerator);
                     break;
                 case VarType.Float:
-                    _interpreter.GetFloatInstResult(instructions).ToString();
+                    DialogInterpreter.GetFloatInstResult(_dialogScript, _textStorage, enumerator);
                     break;
                 case VarType.Bool:
-                    _interpreter.GetBoolInstResult(instructions);
+                    DialogInterpreter.GetBoolInstResult(_dialogScript, _textStorage, enumerator);
                     break;
                 case VarType.Void:
-                    _interpreter.EvalVoidInst(instructions);
+                    DialogInterpreter.EvalVoidExp(_dialogScript, _textStorage, enumerator);
                     break;
             }
         }
@@ -203,32 +225,13 @@ public class DialogScriptReader
 
         void HandleSpeakerSet()
         {
-            int i = 1;
-            string speakerId = _dialogScript.SpeakerIds[instructions[i++]];
-            string? displayName = null, portraitId = null, mood = null;
-            while (i < instructions.Length)
-            {
-                switch ((OpCode)instructions[i++])
-                {
-                    case OpCode.SpeakerSetMood:
-                        mood = GetUpdateValue();
-                        break;
-                    case OpCode.SpeakerSetName:
-                        displayName = GetUpdateValue();
-                        break;
-                    case OpCode.SpeakerSetPortrait:
-                        portraitId = GetUpdateValue();
-                        break;
-                }
-            }
-
-            _dialog.UpdateSpeaker(true, speakerId, displayName, portraitId, mood);
-
-            string GetUpdateValue()
-            {
-                ushort[] updateInst = _dialogScript.Instructions[instructions[i++]];
-                return _interpreter.GetStringInstResult(updateInst);
-            }
+            var enumerator = instructions.GetEnumerator<ushort>();
+            SpeakerUpdate speakerUpdate = DialogInterpreter.GetSpeakerUpdate(_dialogScript, enumerator, _textStorage);
+            _dialog.UpdateSpeaker(true,
+                speakerUpdate.SpeakerId,
+                speakerUpdate.DisplayName,
+                speakerUpdate.PortraitId,
+                speakerUpdate.Mood);
         }
     }
 }

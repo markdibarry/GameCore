@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using Godot;
-using Gictionary = Godot.Collections.Dictionary;
+using GCol = Godot.Collections;
 
 namespace GameCore.Statistics;
 
@@ -34,7 +34,7 @@ public partial class Stat : Resource
     public int Value { get; set; }
     [Export] public int MaxValue { get; set; }
 
-    public override Godot.Collections.Array<Gictionary> _GetPropertyList()
+    public override GCol.Array<GCol.Dictionary> _GetPropertyList()
     {
         return StatsLocator.StatTypeDB.GetStatPropertyList(_statType);
     }

@@ -9,6 +9,24 @@ namespace GameCore.Utility;
 
 public static class GDEx
 {
+    /// <summary>
+    /// Gets and initializes an enumerator to the first item of an array.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="array"></param>
+    /// <returns></returns>
+    public static IEnumerator<T> GetEnumerator<T>(this T[] array)
+    {
+        IEnumerator<T> enumerator = ((IEnumerable<T>)array).GetEnumerator();
+        enumerator.MoveNext();
+        return enumerator;
+    }
+
+    /// <summary>
+    /// Gets an array of enum values of a specific type.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
     public static T[] GetEnums<T>() => (T[])Enum.GetValues(typeof(T));
 
     /// <summary>
@@ -27,6 +45,12 @@ public static class GDEx
         return dict[key];
     }
 
+    /// <summary>
+    /// Returns the array or an empty array if null.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="source"></param>
+    /// <returns></returns>
     public static IEnumerable<T> OrEmpty<T>(this IEnumerable<T>? source)
     {
         return source ?? Array.Empty<T>();

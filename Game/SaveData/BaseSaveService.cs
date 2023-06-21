@@ -19,6 +19,14 @@ public class BaseSaveService<T> where T : IGameSave
         nameof(Resource.ResourcePath),
         nameof(Resource.ResourceLocalToScene)
     };
+    private static readonly JsonSerializerOptions s_options = new()
+    {
+        WriteIndented = true,
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver
+        {
+            Modifiers = { IgnoreBaseClass }
+        }
+    };
 
     private static void IgnoreBaseClass(JsonTypeInfo typeInfo)
     {
@@ -55,15 +63,7 @@ public class BaseSaveService<T> where T : IGameSave
     public static void SaveGame(T gameSave, string? fileName = null)
     {
         fileName ??= $"{s_saveNamePrefix}_{DateTime.UtcNow.Ticks}.json";
-        JsonSerializerOptions options = new()
-        {
-            WriteIndented = true,
-            TypeInfoResolver = new DefaultJsonTypeInfoResolver
-            {
-                Modifiers = { IgnoreBaseClass }
-            }
-        };
-        string saveString = JsonSerializer.Serialize(gameSave, options);
+        string saveString = JsonSerializer.Serialize(gameSave, s_options);
         File.WriteAllText(s_saveFullPath + fileName, saveString);
     }
 }

@@ -11,11 +11,11 @@ namespace GameCore.GUI;
 
 public partial class Dialog : GUILayer
 {
-    public Dialog(IGUIController guiController, DialogBridgeRegister dialogBridgeRegister, DialogScript dialogScript)
+    public Dialog(IGUIController guiController, DialogScript dialogScript)
     {
         GUIController = guiController;
         TextStorage = new TextStorage();
-        _scriptReader = new(this, dialogBridgeRegister, dialogScript);
+        _scriptReader = new(this, dialogScript);
         _dialogBoxScene = GD.Load<PackedScene>(DialogBox.GetScenePath());
         AnchorBottom = 1.0f;
         AnchorRight = 1.0f;

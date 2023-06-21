@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text.Json.Serialization;
 using Godot;
-using Gictionary = Godot.Collections.Dictionary;
+using GCol = Godot.Collections;
 
 namespace GameCore.Statistics;
 
@@ -16,7 +16,7 @@ public partial class Modifier : Resource
         int statType,
         ModOp op,
         int value,
-        Godot.Collections.Array<Condition>? conditions = null,
+        GCol.Array<Condition>? conditions = null,
         bool isHidden = false)
     {
         StatType = statType;
@@ -49,7 +49,7 @@ public partial class Modifier : Resource
     private int _statType;
     [Export] public bool IsHidden { get; set; }
     [Export] public ModOp Op { get; set; }
-    [Export] public Godot.Collections.Array<Condition> Conditions { get; set; } = new();
+    [Export] public GCol.Array<Condition> Conditions { get; set; } = new();
     public int StatType
     {
         get => _statType;
@@ -74,7 +74,7 @@ public partial class Modifier : Resource
         return conditions.Any(x => x.ResultType.HasFlag(ConditionResultType.Remove) && x.CheckIfConditionsMet(stats));
     }
 
-    public override Godot.Collections.Array<Gictionary> _GetPropertyList()
+    public override GCol.Array<GCol.Dictionary> _GetPropertyList()
     {
         return StatsLocator.StatTypeDB.GetStatPropertyList(_statType);
     }

@@ -7,43 +7,45 @@ using System.Reflection;
 
 namespace GameCore.GUI;
 
-public class DialogBridgeRegister
+public static class DialogBridgeRegister
 {
-    public DialogBridgeRegister(DialogBridgeBase dialogBridgeBase)
+    public static ReadOnlyDictionary<string, VarDef> Properties { get; private set; } = null!;
+    public static ReadOnlyDictionary<string, FuncDef> Methods { get; private set; } = null!;
+
+    /// <summary>
+    /// Sets up the register
+    /// </summary>
+    /// <param name="dialogBridgeBase"></param>
+    public static void SetDialogBridge(DialogBridgeBase dialogBridgeBase)
     {
-        _bridge = dialogBridgeBase;
-        Properties = new(GenerateProperties());
-        Methods = new(GenerateMethods());
+        Properties = new(GenerateProperties(dialogBridgeBase));
+        Methods = new(GenerateMethods(dialogBridgeBase));
     }
 
-    private readonly DialogBridgeBase _bridge;
-    public ReadOnlyDictionary<string, VarDef> Properties { get; }
-    public ReadOnlyDictionary<string, FuncDef> Methods { get; }
-
-    private Dictionary<string, VarDef> GenerateProperties()
+    private static Dictionary<string, VarDef> GenerateProperties(DialogBridgeBase bridge)
     {
         Dictionary<string, VarDef> properties = new();
-        PropertyInfo[] propertyInfos = _bridge.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+        PropertyInfo[] propertyInfos = bridge.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
         foreach (PropertyInfo propertyInfo in propertyInfos)
         {
             MethodInfo getMethodInfo = propertyInfo.GetGetMethod()!;
             MethodInfo setMethodInfo = propertyInfo.GetSetMethod()!;
-            Delegate getter = getMethodInfo.CreateDelegate(GetDelegateType(getMethodInfo), _bridge);
-            Delegate setter = setMethodInfo.CreateDelegate(GetDelegateType(setMethodInfo), _bridge);
+            Delegate getter = getMethodInfo.CreateDelegate(GetDelegateType(getMethodInfo), bridge);
+            Delegate setter = setMethodInfo.CreateDelegate(GetDelegateType(setMethodInfo), bridge);
             properties.Add(propertyInfo.Name, new(getter, setter, GetVarType(propertyInfo.PropertyType)));
         }
         return properties;
     }
 
-    private Dictionary<string, FuncDef> GenerateMethods()
+    private static Dictionary<string, FuncDef> GenerateMethods(DialogBridgeBase bridge)
     {
         Dictionary<string, FuncDef> methods = new();
-        IEnumerable<MethodInfo> methodInfos = _bridge.GetType()
+        IEnumerable<MethodInfo> methodInfos = bridge.GetType()
             .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
             .Where(x => !x.IsSpecialName);
         foreach (MethodInfo methodInfo in methodInfos)
         {
-            Func<object[], object?> del = CreateDynamicDelegate(methodInfo, _bridge);
+            Func<object[], object?> del = CreateDynamicDelegate(methodInfo, bridge);
             List<VarType> argTypes = new();
             foreach (ParameterInfo paramInfo in methodInfo.GetParameters())
                 argTypes.Add(GetVarType(paramInfo.ParameterType));

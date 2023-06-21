@@ -2,11 +2,6 @@
 
 namespace GameCore.GUI;
 
-public interface ITextEvent
-{
-    bool TryHandleEvent(object context);
-}
-
 public abstract class TextEvent : ITextEvent
 {
     protected TextEvent(int index)
@@ -17,7 +12,7 @@ public abstract class TextEvent : ITextEvent
     public bool Seen { get; set; }
     public int Index { get; set; }
 
-    public virtual bool TryHandleEvent(object context) => true;
+    public abstract bool TryHandleEvent(object context);
 }
 
 public class InstructionTextEvent : TextEvent
@@ -25,7 +20,6 @@ public class InstructionTextEvent : TextEvent
     public InstructionTextEvent(int index, ushort[] instructions)
         : base(index)
     {
-        Index = index;
         Instructions = instructions;
     }
 

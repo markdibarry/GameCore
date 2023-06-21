@@ -9,14 +9,7 @@ namespace GameCore.GUI;
 
 public partial class GUIController : CanvasLayer, IGUIController
 {
-    public GUIController()
-    {
-        _guiLayers = new();
-        _dialogBridgeRegister = new(new DialogBridge());
-    }
-
-    private readonly DialogBridgeRegister _dialogBridgeRegister;
-    private readonly List<GUILayer> _guiLayers;
+    private readonly List<GUILayer> _guiLayers = new();
     private GUILayer? CurrentLayer => _guiLayers.Count > 0 ? _guiLayers[^1] : null;
     public bool MenuActive { get; private set; }
     public bool DialogActive { get; private set; }
@@ -84,7 +77,7 @@ public partial class GUIController : CanvasLayer, IGUIController
         try
         {
             DialogScript dialogScript = Dialog.LoadScript(dialogPath);
-            dialog = new(this, _dialogBridgeRegister, dialogScript);
+            dialog = new(this, dialogScript);
             AddChild(dialog);
             _guiLayers.Add(dialog);
             UpdateCurrentGUI();

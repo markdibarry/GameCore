@@ -10,5 +10,5 @@ public abstract partial class BaseActorData : Resource
     [Export] public string EquipmentSlotPresetId { get; set; } = string.Empty;
 
     public abstract BaseActorData Clone();
-    public abstract BaseActor CreateActor(BaseInventory? externalInventory = null);
+    public abstract BaseActor ToActor(BaseInventory? externalInventory = null);
 }

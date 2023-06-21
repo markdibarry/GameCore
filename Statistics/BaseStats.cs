@@ -85,7 +85,7 @@ public abstract class BaseStats
         if (ignoreDependentMods)
         {
             foreach (KeyValuePair<int, List<ModifierRef>> pair in ModifierRefs)
-                modRefs.AddRange(pair.Value.Where(x => x.Source != null));
+                modRefs.AddRange(pair.Value.Where(x => x.Source == null));
             return modRefs;
         }
 

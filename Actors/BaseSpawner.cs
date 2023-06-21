@@ -2,7 +2,7 @@
 using System.Linq;
 using GameCore.Utility;
 using Godot;
-using Gictionary = Godot.Collections.Dictionary;
+using GCol = Godot.Collections;
 
 namespace GameCore.Actors;
 
@@ -37,9 +37,9 @@ public abstract partial class BaseSpawner : Node2D
 
     public event Action<BaseSpawner>? SpawnRequested;
 
-    public override Godot.Collections.Array<Gictionary> _GetPropertyList()
+    public override GCol.Array<GCol.Dictionary> _GetPropertyList()
     {
-        Godot.Collections.Array<Gictionary> props = new()
+        GCol.Array<GCol.Dictionary> props = new()
         {
             new()
             {
@@ -123,7 +123,7 @@ public abstract partial class BaseSpawner : Node2D
         if (ActorData == null || ActorBody == null)
             return null;
 
-        BaseActor actor = ((BaseActorData)ActorData).CreateActor();
+        BaseActor actor = ((BaseActorData)ActorData).ToActor();
         BaseActorBody actorBody = (BaseActorBody)ActorBody.Duplicate();
         actorBody.SetRole(DefaultActorRole);
         actor.SetActorBody(actorBody);
