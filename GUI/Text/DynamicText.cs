@@ -18,13 +18,13 @@ public partial class DynamicText : RichTextLabel, IEventParser
 
     public static string GetScenePath() => GDEx.GetScenePath();
     private double _counter;
+    private double _pauseTimer;
     private int _currentLine;
     private string _customText = string.Empty;
     private int _endChar = -1;
     private List<int> _lineBreakCharIndices = new();
     private bool _showToEndCharEnabled;
     private bool _sizeDirty;
-    private double _speed = 0.02;
     private double _speedMultiplier = 1;
     private bool _textDirty;
     private List<ITextEvent> _textEvents = new();
@@ -86,11 +86,18 @@ public partial class DynamicText : RichTextLabel, IEventParser
         get => _speedMultiplier;
         set
         {
-            if (value < 0)
-                value = 0;
-            if (value > _speedMultiplier)
-                Counter = (value * _speed) - (_speedMultiplier * _speed);
-            _speedMultiplier = value;
+            if (value > 0)
+                _speedMultiplier = value;
+        }
+    }
+    [Export]
+    public bool Reset
+    {
+        get => false;
+        set
+        {
+            if (value)
+                ResetText();
         }
     }
 
@@ -102,14 +109,9 @@ public partial class DynamicText : RichTextLabel, IEventParser
         set => _endChar = value;
     }
     public int LineCount { get; private set; }
-    public double Speed => SpeedUpEnabled ? 0 : SpeedMultiplier * _speed;
+    public double CharsPerSecond { get; set; } = 30;
     public bool SpeedUpEnabled { get; set; }
     public int TotalCharacterCount { get; private set; }
-    private double Counter
-    {
-        get => _counter;
-        set => _counter = Math.Max(value, 0);
-    }
     public event Action? LoadingStarted;
     public event Action? StartedWriting;
     public event Action? StoppedWriting;
@@ -131,6 +133,7 @@ public partial class DynamicText : RichTextLabel, IEventParser
     {
         if (CurrentState == State.Loading)
             return;
+
         if (_textDirty)
             HandleTextDirty();
         else if (_sizeDirty)
@@ -150,20 +153,19 @@ public partial class DynamicText : RichTextLabel, IEventParser
         return _lineBreakCharIndices[line];
     }
 
-    public bool IsAtTextEnd()
-    {
-        return VisibleCharacters >= EndChar && Counter == 0;
-    }
+    public bool IsAtTextEnd() => VisibleCharacters >= EndChar && _counter == 0;
 
     public void OnResized() => _sizeDirty = true;
 
-    public void RefreshText() => HandleTextDirty();
+    public void ResetText()
+    {
+        StopWriting();
+        ResetVisibleCharacters();
+        _textEventIndex = 0;
+        SpeedMultiplier = 1;
+    }
 
-    public void ResetSpeed() => SpeedMultiplier = 1;
-
-    public void SetPause(double time) => Counter += time;
-
-    public void SpeedUpText() => Counter = 0;
+    public void SetPause(double time) => _pauseTimer = time;
 
     public void StartWriting()
     {
@@ -179,6 +181,7 @@ public partial class DynamicText : RichTextLabel, IEventParser
         if (CurrentState != State.Writing)
             return;
         CurrentState = State.Idle;
+        _counter = 0;
         StoppedWriting?.Invoke();
     }
 
@@ -248,7 +251,6 @@ public partial class DynamicText : RichTextLabel, IEventParser
     private void Init()
     {
         //ResetSpeed();
-        Counter = Speed;
         UpdateTextData();
         Resized += OnResized;
         ThemeChanged += OnResized;
@@ -311,26 +313,29 @@ public partial class DynamicText : RichTextLabel, IEventParser
     /// <param name="delta"></param>
     private void Write(double delta)
     {
-        if (Counter > 0)
+        if (_pauseTimer > 0)
         {
-            Counter -= delta;
+            if (SpeedUpEnabled)
+                delta *= 3;
+            _pauseTimer -= Math.Min(delta, _pauseTimer);
             return;
         }
 
-        VisibleCharacters++;
-        Counter = VisibleCharacters < EndChar ? Speed : 0;
+        double totalSpeed = CharsPerSecond * SpeedMultiplier;
+
+        if (SpeedUpEnabled)
+            totalSpeed *= 3;
+
+        _counter += delta * totalSpeed;
+
+        if (_counter < 1)
+            return;
+
+        int newChars = (int)_counter;
+        if (GetNextTextEvent() is TextEvent textEvent)
+            newChars = Math.Min(newChars, textEvent.Index - VisibleCharacters);
+        VisibleCharacters += SpeedUpEnabled ? newChars : 1;
+        _counter = VisibleCharacters < EndChar ? _counter % 1 : 0;
         RaiseTextEvents();
-
-
-        //Counter += delta * Speed;
-        //if (Counter > 0)
-        //{
-        //    int newChars = (int)Counter;
-        //    if (GetNextTextEvent() is TextEvent textEvent)
-        //        newChars = Math.Min(newChars, textEvent.Index - VisibleCharacters);
-        //    VisibleCharacters += SpeedUpEnabled ? newChars : 1;
-        //    Counter = VisibleCharacters < EndChar ? Counter % 1 : 0;
-        //    RaiseTextEvents();
-        //}
     }
 }

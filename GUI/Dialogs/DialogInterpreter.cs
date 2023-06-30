@@ -8,14 +8,15 @@ public static class DialogInterpreter
 {
     private static DialogScript s_script = null!;
     private static IStorageContext s_storage = null!;
-    private static IEnumerator<ushort> s_enum = null!;
+    private static IndexedArray<ushort> s_indexedArray = s_defaultIndexedArray;
+    private static readonly IndexedArray<ushort> s_defaultIndexedArray = new(Array.Empty<ushort>());
 
     public static VarType GetReturnType(
         DialogScript dialogScript,
         IStorageContext textStorage,
-        IEnumerator<ushort> enumerator)
+        IndexedArray<ushort> indexedArray)
     {
-        return (OpCode)enumerator.Current switch
+        return (OpCode)indexedArray.Current switch
         {
             OpCode.String => VarType.String,
             OpCode.Float or
@@ -31,8 +32,8 @@ public static class DialogInterpreter
             OpCode.Equals or
             OpCode.NotEquals or
             OpCode.Not => VarType.Bool,
-            OpCode.Func => GetFuncReturnType(enumerator),
-            OpCode.Var => GetVarType(enumerator),
+            OpCode.Func => GetFuncReturnType(indexedArray),
+            OpCode.Var => GetVarType(indexedArray),
             OpCode.Assign or
             OpCode.MultAssign or
             OpCode.DivAssign or
@@ -41,10 +42,10 @@ public static class DialogInterpreter
             _ => default
         };
 
-        VarType GetVarType(IEnumerator<ushort> enumerator)
+        VarType GetVarType(IndexedArray<ushort> indexedArray)
         {
-            enumerator.MoveNext();
-            string varName = dialogScript.InstStrings[enumerator.Current];
+            ushort nameIndex = indexedArray[indexedArray.Index + 1];
+            string varName = dialogScript.InstStrings[nameIndex];
 
             if (DialogBridgeRegister.Properties.TryGetValue(varName, out VarDef? varDef))
                 return varDef.VarType;
@@ -61,10 +62,10 @@ public static class DialogInterpreter
             };
         }
 
-        VarType GetFuncReturnType(IEnumerator<ushort> enumerator)
+        VarType GetFuncReturnType(IndexedArray<ushort> indexedArray)
         {
-            enumerator.MoveNext();
-            string funcName = dialogScript.InstStrings[enumerator.Current];
+            ushort nameIndex = indexedArray[indexedArray.Index + 1];
+            string funcName = dialogScript.InstStrings[nameIndex];
 
             if (!DialogBridgeRegister.Methods.TryGetValue(funcName, out FuncDef? funcDef))
                 return default;
@@ -76,9 +77,9 @@ public static class DialogInterpreter
     public static float GetFloatInstResult(
         DialogScript script,
         IStorageContext storage,
-        IEnumerator<ushort> enumerator)
+        IndexedArray<ushort> indexedArray)
     {
-        SetPrivateFields(script, storage, enumerator);
+        SetPrivateFields(script, storage, indexedArray);
         float result = EvalFloatExp(false);
         ResetPrivateFields();
         return result;
@@ -87,9 +88,9 @@ public static class DialogInterpreter
     public static bool GetBoolInstResult(
         DialogScript script,
         IStorageContext storage,
-        IEnumerator<ushort> enumerator)
+        IndexedArray<ushort> indexedArray)
     {
-        SetPrivateFields(script, storage, enumerator);
+        SetPrivateFields(script, storage, indexedArray);
         bool result = EvalBoolExp(false);
         ResetPrivateFields();
         return result;
@@ -98,9 +99,9 @@ public static class DialogInterpreter
     public static string GetStringInstResult(
         DialogScript script,
         IStorageContext storage,
-        IEnumerator<ushort> enumerator)
+        IndexedArray<ushort> indexedArray)
     {
-        SetPrivateFields(script, storage, enumerator);
+        SetPrivateFields(script, storage, indexedArray);
         string result = EvalStringExp(false);
         ResetPrivateFields();
         return result;
@@ -109,11 +110,11 @@ public static class DialogInterpreter
     public static void EvalVoidExp(
         DialogScript script,
         IStorageContext storage,
-        IEnumerator<ushort> enumerator)
+        IndexedArray<ushort> indexedArray)
     {
-        SetPrivateFields(script, storage, enumerator);
+        SetPrivateFields(script, storage, indexedArray);
 
-        switch ((OpCode)s_enum.Current)
+        switch ((OpCode)s_indexedArray.Current)
         {
             case OpCode.Assign:
                 EvalAssign();
@@ -122,7 +123,7 @@ public static class DialogInterpreter
             case OpCode.DivAssign:
             case OpCode.AddAssign:
             case OpCode.SubAssign:
-                EvalMathAssign((OpCode)s_enum.Current);
+                EvalMathAssign((OpCode)s_indexedArray.Current);
                 break;
             case OpCode.Func:
                 EvalFunc();
@@ -135,8 +136,8 @@ public static class DialogInterpreter
 
         void EvalAssign()
         {
-            s_enum.MoveNext();
-            string varName = s_script.InstStrings[s_enum.Current];
+            s_indexedArray.Index++;
+            string varName = s_script.InstStrings[s_indexedArray.Current];
 
             if (DialogBridgeRegister.Properties.TryGetValue(varName, out VarDef? varDef))
             {
@@ -155,16 +156,17 @@ public static class DialogInterpreter
             }
             else if (s_storage != null)
             {
-                switch (GetReturnType(s_script, s_storage, s_enum))
+                s_indexedArray.Index++;
+                switch (GetReturnType(s_script, s_storage, s_indexedArray))
                 {
                     case VarType.Float:
-                        s_storage.SetValue(varName, EvalFloatExp());
+                        s_storage.SetValue(varName, EvalFloatExp(false));
                         break;
                     case VarType.Bool:
-                        s_storage.SetValue(varName, EvalBoolExp());
+                        s_storage.SetValue(varName, EvalBoolExp(false));
                         break;
                     case VarType.String:
-                        s_storage.SetValue(varName, EvalStringExp());
+                        s_storage.SetValue(varName, EvalStringExp(false));
                         break;
                 }
             }
@@ -172,8 +174,9 @@ public static class DialogInterpreter
 
         void EvalMathAssign(OpCode instructionType)
         {
-            s_enum.MoveNext();
-            string varName = s_script.InstStrings[s_enum.Current];
+            s_indexedArray.Index++;
+            string varName = s_script.InstStrings[s_indexedArray.Current];
+
             if (DialogBridgeRegister.Properties.TryGetValue(varName, out VarDef? varDef))
             {
                 float originalValue = ((Func<float>)varDef.Getter).Invoke();
@@ -203,16 +206,17 @@ public static class DialogInterpreter
 
     public static SpeakerUpdate GetSpeakerUpdate(
         DialogScript script,
-        IEnumerator<ushort> enumerator,
+        IndexedArray<ushort> indexedArray,
         IStorageContext storage)
     {
-        enumerator.MoveNext();
-        string speakerId = script.SpeakerIds[enumerator.Current];
+        indexedArray.Index++;
+        string speakerId = script.SpeakerIds[indexedArray.Current];
         string? displayName = null, portraitId = null, mood = null;
+        indexedArray.Index++;
 
-        while (enumerator.MoveNext())
+        while (indexedArray.Index < indexedArray.Array.Length)
         {
-            switch ((OpCode)enumerator.Current)
+            switch ((OpCode)indexedArray.Current)
             {
                 case OpCode.SpeakerSetMood:
                     mood = GetUpdateValue();
@@ -224,39 +228,39 @@ public static class DialogInterpreter
                     portraitId = GetUpdateValue();
                     break;
             }
+            indexedArray.Index++;
         }
 
         return new SpeakerUpdate(speakerId, displayName, portraitId, mood);
 
         string GetUpdateValue()
         {
-            enumerator.MoveNext();
-            ushort[] updateInst = script.Instructions[enumerator.Current];
-            var updateEnum = updateInst.GetEnumerator<ushort>();
-            return GetStringInstResult(script, storage, updateEnum);
+            indexedArray.Index++;
+            ushort[] updateInst = script.Instructions[indexedArray.Current];
+            return GetStringInstResult(script, storage, new IndexedArray<ushort>(updateInst));
         }
     }
 
-    private static void SetPrivateFields(DialogScript script, IStorageContext storage, IEnumerator<ushort> enumerator)
+    private static void SetPrivateFields(DialogScript script, IStorageContext storage, IndexedArray<ushort> indexedArray)
     {
         s_script = script;
         s_storage = storage;
-        s_enum = enumerator;
+        s_indexedArray = indexedArray;
     }
 
     private static void ResetPrivateFields()
     {
         s_script = null!;
         s_storage = null!;
-        s_enum = null!;
+        s_indexedArray = s_defaultIndexedArray!;
     }
 
     private static bool EvalBoolExp(bool moveNext = true)
     {
         if (moveNext)
-            s_enum.MoveNext();
+            s_indexedArray.Index++;
 
-        return (OpCode)s_enum.Current switch
+        return (OpCode)s_indexedArray.Current switch
         {
             OpCode.Bool => EvalBool(),
             OpCode.Less => EvalLess(),
@@ -275,14 +279,14 @@ public static class DialogInterpreter
 
         bool EvalBool()
         {
-            s_enum.MoveNext();
-            return s_enum.Current == 1;
+            s_indexedArray.Index++;
+            return s_indexedArray.Current == 1;
         }
 
         bool EvalEquals()
         {
-            s_enum.MoveNext();
-            return GetReturnType(s_script, s_storage, s_enum) switch
+            s_indexedArray.Index++;
+            return GetReturnType(s_script, s_storage, s_indexedArray) switch
             {
                 VarType.Float => EvalFloatExp() == EvalFloatExp(),
                 VarType.Bool => EvalBoolExp() == EvalBoolExp(),
@@ -309,9 +313,9 @@ public static class DialogInterpreter
     private static string EvalStringExp(bool moveNext = true)
     {
         if (moveNext)
-            s_enum.MoveNext();
+            s_indexedArray.Index++;
 
-        return (OpCode)s_enum.Current switch
+        return (OpCode)s_indexedArray.Current switch
         {
             OpCode.String => EvalString(),
             OpCode.Var => EvalVar<string>() ?? string.Empty,
@@ -321,17 +325,17 @@ public static class DialogInterpreter
 
         string EvalString()
         {
-            s_enum.MoveNext();
-            return s_script.InstStrings[s_enum.Current];
+            s_indexedArray.Index++;
+            return s_script.InstStrings[s_indexedArray.Current];
         }
     }
 
     private static float EvalFloatExp(bool moveNext = true)
     {
         if (moveNext)
-            s_enum.MoveNext();
+            s_indexedArray.Index++;
 
-        return (OpCode)s_enum.Current switch
+        return (OpCode)s_indexedArray.Current switch
         {
             OpCode.Float => EvalFloat(),
             OpCode.Mult => EvalMult(),
@@ -345,8 +349,8 @@ public static class DialogInterpreter
 
         float EvalFloat()
         {
-            s_enum.MoveNext();
-            return s_script.InstFloats[s_enum.Current];
+            s_indexedArray.Index++;
+            return s_script.InstFloats[s_indexedArray.Current];
         }
 
         float EvalMult() => EvalFloatExp() * EvalFloatExp();
@@ -360,8 +364,8 @@ public static class DialogInterpreter
 
     private static T? EvalVar<T>()
     {
-        s_enum.MoveNext();
-        string varName = s_script.InstStrings[s_enum.Current];
+        s_indexedArray.Index++;
+        string varName = s_script.InstStrings[s_indexedArray.Current];
 
         if (DialogBridgeRegister.Properties.TryGetValue(varName, out VarDef? varDef))
             return ((Func<T>)varDef.Getter).Invoke();
@@ -374,14 +378,14 @@ public static class DialogInterpreter
 
     private static object? EvalFunc()
     {
-        s_enum.MoveNext();
-        string funcName = s_script.InstStrings[s_enum.Current];
+        s_indexedArray.Index++;
+        string funcName = s_script.InstStrings[s_indexedArray.Current];
 
         if (!DialogBridgeRegister.Methods.TryGetValue(funcName, out FuncDef? funcDef))
             return default;
 
-        s_enum.MoveNext();
-        int argNum = s_enum.Current;
+        s_indexedArray.Index++;
+        int argNum = s_indexedArray.Current;
 
         if (argNum == 0)
             return funcDef.Method.Invoke(Array.Empty<object>());

@@ -97,9 +97,9 @@ public class DialogScriptReader
             foreach (ushort instValue in instValues)
             {
                 InstructionStatement condition = _dialogScript.InstructionStmts[instValue];
-                var enumerator = _dialogScript.Instructions[condition.Index].GetEnumerator<ushort>();
+                IndexedArray<ushort> indexedArray = new(_dialogScript.Instructions[condition.Index]);
 
-                if (DialogInterpreter.GetBoolInstResult(_dialogScript, _textStorage, enumerator))
+                if (DialogInterpreter.GetBoolInstResult(_dialogScript, _textStorage, indexedArray))
                 {
                     await ReadNextStatementAsync(condition.Next);
                     return;
@@ -152,9 +152,9 @@ public class DialogScriptReader
 
                     i++;
                     ushort[] condition = _dialogScript.Instructions[choiceSet[i]];
-                    IEnumerator<ushort> enumerator = condition.GetEnumerator<ushort>();
+                    IndexedArray<ushort> indexedArray = new(condition);
 
-                    if (!DialogInterpreter.GetBoolInstResult(_dialogScript, _textStorage, enumerator))
+                    if (!DialogInterpreter.GetBoolInstResult(_dialogScript, _textStorage, indexedArray))
                         validIndex = choiceSet[i];
                 }
                 return choices;
@@ -193,23 +193,22 @@ public class DialogScriptReader
 
         void HandleEvaluate()
         {
-            var enumerator = instructions.GetEnumerator<ushort>();
-            VarType returnType = DialogInterpreter.GetReturnType(_dialogScript, _textStorage, enumerator);
-            enumerator.MoveNext();
+            IndexedArray<ushort> indexedArray = new(instructions);
+            VarType returnType = DialogInterpreter.GetReturnType(_dialogScript, _textStorage, indexedArray);
 
             switch (returnType)
             {
                 case VarType.String:
-                    DialogInterpreter.GetStringInstResult(_dialogScript, _textStorage, enumerator);
+                    DialogInterpreter.GetStringInstResult(_dialogScript, _textStorage, indexedArray);
                     break;
                 case VarType.Float:
-                    DialogInterpreter.GetFloatInstResult(_dialogScript, _textStorage, enumerator);
+                    DialogInterpreter.GetFloatInstResult(_dialogScript, _textStorage, indexedArray);
                     break;
                 case VarType.Bool:
-                    DialogInterpreter.GetBoolInstResult(_dialogScript, _textStorage, enumerator);
+                    DialogInterpreter.GetBoolInstResult(_dialogScript, _textStorage, indexedArray);
                     break;
                 case VarType.Void:
-                    DialogInterpreter.EvalVoidExp(_dialogScript, _textStorage, enumerator);
+                    DialogInterpreter.EvalVoidExp(_dialogScript, _textStorage, indexedArray);
                     break;
             }
         }
@@ -225,8 +224,8 @@ public class DialogScriptReader
 
         void HandleSpeakerSet()
         {
-            var enumerator = instructions.GetEnumerator<ushort>();
-            SpeakerUpdate speakerUpdate = DialogInterpreter.GetSpeakerUpdate(_dialogScript, enumerator, _textStorage);
+            IndexedArray<ushort> indexedArray = new(instructions);
+            SpeakerUpdate speakerUpdate = DialogInterpreter.GetSpeakerUpdate(_dialogScript, indexedArray, _textStorage);
             _dialog.UpdateSpeaker(true,
                 speakerUpdate.SpeakerId,
                 speakerUpdate.DisplayName,

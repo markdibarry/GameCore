@@ -18,11 +18,7 @@ public partial class DynamicTextBox : Control
     public int CurrentPage
     {
         get => _currentPage;
-        set
-        {
-            _currentPage = GetValidPage(value);
-            MoveToPage(_currentPage);
-        }
+        set => MoveToPage(GetValidPage(value));
     }
     [Export(PropertyHint.MultilineText)]
     public string CustomText
@@ -54,7 +50,16 @@ public partial class DynamicTextBox : Control
         get => _dynamicText.SpeedMultiplier;
         set => _dynamicText.SpeedMultiplier = value;
     }
-    public double Speed => _dynamicText.Speed;
+    [Export]
+    public bool Reset
+    {
+        get => false;
+        set
+        {
+            if (value)
+                _dynamicText.ResetText();
+        }
+    }
     public State CurrentState { get; private set; }
     public bool SpeedUpEnabled
     {
@@ -78,11 +83,13 @@ public partial class DynamicTextBox : Control
 
     public bool IsAtPageEnd() => _dynamicText.IsAtTextEnd();
 
-    public void RefreshText() => _dynamicText.RefreshText();
+    public void ResetText()
+    {
+        CurrentPage = 0;
+        _dynamicText.ResetText();
+    }
 
-    public void ResetSpeed() => _dynamicText.ResetSpeed();
-
-    public void SpeedUpText() => _dynamicText.SpeedUpText();
+    public void SetPause(double time) => _dynamicText.SetPause(time);
 
     public void StartWriting()
     {
@@ -209,6 +216,7 @@ public partial class DynamicTextBox : Control
     /// <param name="page"></param>
     private void MoveToPage(int page)
     {
+        _currentPage = page;
         _dynamicText.EndChar = GetEndChar(page);
         _dynamicText.CurrentLine = _pageBreakLineIndices[page];
     }
@@ -217,7 +225,6 @@ public partial class DynamicTextBox : Control
     {
         _displayHeight = _textWindow.Size.Y;
         _pageBreakLineIndices = GetPageBreakLineIndices();
-        _currentPage = 0;
-        MoveToPage(0);
+        CurrentPage = 0;
     }
 }

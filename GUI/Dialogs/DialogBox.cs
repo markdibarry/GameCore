@@ -78,7 +78,12 @@ public partial class DialogBox : Control
         Writing
     }
 
-    public override void _Ready() => Init();
+    public override void _Ready()
+    {
+        SetNodeReferences();
+        SubscribeEvents();
+        CurrentState = State.Idle;
+    }
 
     public void HandleInput(IGUIInputHandler menuInput, double delta)
     {
@@ -89,18 +94,16 @@ public partial class DialogBox : Control
             SpeedUpEnabled = true;
     }
 
-    public bool HasSpeaker(string speakerId) => _portraitContainer.HasNode(speakerId);
-
     public Portrait? GetPortrait(string speakerId)
     {
         return _portraitContainer.GetNodeOrNull<Portrait>(speakerId);
     }
 
+    public bool HasSpeaker(string speakerId) => _portraitContainer.HasNode(speakerId);
+
     public bool IsAtLastPage() => _dynamicTextBox.IsAtLastPage();
 
     public bool IsAtPageEnd() => _dynamicTextBox.IsAtPageEnd();
-
-    public void SpeedUpText() => _dynamicTextBox.SpeedUpText();
 
     public void StartWriting()
     {
@@ -179,13 +182,6 @@ public partial class DialogBox : Control
 
         CurrentPage++;
         StartWriting();
-    }
-
-    private void Init()
-    {
-        SetNodeReferences();
-        SubscribeEvents();
-        CurrentState = State.Idle;
     }
 
     private void OnStartedWriting()

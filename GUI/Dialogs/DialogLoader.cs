@@ -12,8 +12,10 @@ public static class DialogLoader
         //path = Godot.ProjectSettings.GlobalizePath($"{Config.DialogPath}{path}.json");
         string content = File.ReadAllText(path);
         DialogScript? dialogScript = JsonSerializer.Deserialize<DialogScript>(content);
+
         if (dialogScript == null)
             throw new DialogException("Could not deserialize.");
+
         return dialogScript;
     }
 }

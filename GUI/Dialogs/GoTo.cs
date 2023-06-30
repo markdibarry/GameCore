@@ -14,5 +14,5 @@ public readonly struct GoTo
     public StatementType Type { get; }
     public int Index { get; }
 
-    public static readonly GoTo Default = new GoTo();
+    public static readonly GoTo Default = new();
 }

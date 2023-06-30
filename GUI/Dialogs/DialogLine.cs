@@ -78,6 +78,9 @@ public class DialogLine : IStatement, IEventParser
             case OpCode.Speed:
                 AddSpeedEvent();
                 break;
+            case OpCode.Pause:
+                AddPauseEvent();
+                break;
             case OpCode.Goto:
                 HandleGoTo();
                 break;
@@ -101,17 +104,16 @@ public class DialogLine : IStatement, IEventParser
         void AppendResult()
         {
             string result = string.Empty;
-            var enumerator = instructions.GetEnumerator<ushort>();
-            VarType returnType = DialogInterpreter.GetReturnType(_dialogScript, _textStorage, enumerator);
-            enumerator.MoveNext();
+            IndexedArray<ushort> indexedArray = new(instructions);
+            VarType returnType = DialogInterpreter.GetReturnType(_dialogScript, _textStorage, indexedArray);
 
             switch (returnType)
             {
                 case VarType.String:
-                    result = DialogInterpreter.GetStringInstResult(_dialogScript, _textStorage, enumerator);
+                    result = DialogInterpreter.GetStringInstResult(_dialogScript, _textStorage, indexedArray);
                     break;
                 case VarType.Float:
-                    result = DialogInterpreter.GetFloatInstResult(_dialogScript, _textStorage, enumerator).ToString();
+                    result = DialogInterpreter.GetFloatInstResult(_dialogScript, _textStorage, indexedArray).ToString();
                     break;
                 case VarType.Void:
                     AddAsTextEvent();
@@ -136,12 +138,18 @@ public class DialogLine : IStatement, IEventParser
             events.Add(textEvent);
         }
 
+        void AddPauseEvent()
+        {
+            PauseTextEvent textEvent = new(renderedIndexCopy, _dialogScript.InstFloats[instructions[1]]);
+            events.Add(textEvent);
+        }
+
         void HandleGoTo() => Next = new GoTo(StatementType.Section, instructions[1]);
 
         void AddSpeakerSetEvent()
         {
-            var enumerator = instructions.GetEnumerator<ushort>();
-            SpeakerUpdate speakerUpdate = DialogInterpreter.GetSpeakerUpdate(_dialogScript, enumerator, _textStorage);
+            IndexedArray<ushort> indexedArray = new(instructions);
+            SpeakerUpdate speakerUpdate = DialogInterpreter.GetSpeakerUpdate(_dialogScript, indexedArray, _textStorage);
             SpeakerTextEvent textEvent = new(
                 renderedIndexCopy,
                 speakerUpdate.SpeakerId,

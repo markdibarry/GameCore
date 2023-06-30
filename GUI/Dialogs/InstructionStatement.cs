@@ -2,7 +2,7 @@
 
 namespace GameCore.GUI;
 
-public class InstructionStatement : IStatement
+public readonly struct InstructionStatement : IStatement
 {
     [JsonConstructor]
     public InstructionStatement(int index, GoTo next)
@@ -12,5 +12,5 @@ public class InstructionStatement : IStatement
     }
 
     public int Index { get; }
-    public GoTo Next { get; set; }
+    public GoTo Next { get; }
 }

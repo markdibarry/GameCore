@@ -38,6 +38,7 @@ public partial class Dialog : GUILayer
     {
         if (CurrentState != State.Available || FocusedBox == null)
             return;
+
         FocusedBox.HandleInput(menuInput, delta);
     }
 
@@ -50,6 +51,7 @@ public partial class Dialog : GUILayer
     {
         if (box == null)
             return;
+
         await box.TransitionCloseAsync();
         box.TextEventTriggered -= OnTextEventTriggered;
         box.DialogLineFinished -= OnDialogLineFinished;
@@ -63,15 +65,9 @@ public partial class Dialog : GUILayer
         await CloseDialogBoxAsync(FocusedBox);
     }
 
-    public void EvaluateInstructions(ushort[] instructions)
-    {
-        _scriptReader.Evaluate(instructions);
-    }
+    public void EvaluateInstructions(ushort[] instructions) => _scriptReader.Evaluate(instructions);
 
-    public Speaker GetSpeaker(string speakerId)
-    {
-        return _scriptReader.GetSpeaker(speakerId);
-    }
+    public Speaker GetSpeaker(string speakerId) => _scriptReader.GetSpeaker(speakerId);
 
     public DialogBox? GetBoxBySpeakerId(string speakerId)
     {
@@ -86,9 +82,12 @@ public partial class Dialog : GUILayer
     {
         if (string.IsNullOrEmpty(path))
             throw new DialogException("No path provided");
+
         DialogScript? dialogScript = DialogLoader.Load(path);
+
         if (dialogScript == null || !dialogScript.Sections.Any())
             throw new DialogException($"No dialog found at path: {path}");
+
         return dialogScript;
     }
 
@@ -136,16 +135,19 @@ public partial class Dialog : GUILayer
         Speaker speaker = GetSpeaker(speakerId);
         DialogBox? dialogBox = GetBoxBySpeakerId(speakerId);
         Portrait? portrait = dialogBox?.GetPortrait(speakerId);
+
         if (displayName != null)
         {
             speaker.DisplayName = displayName;
             dialogBox?.UpdateSpeakersNames();
         }
+
         if (portraitId != null)
         {
             speaker.Portrait = portraitId;
             portrait?.SetPortraitFrames(speaker.Portrait);
         }
+
         if (mood != null)
         {
             if (global)
@@ -192,6 +194,7 @@ public partial class Dialog : GUILayer
     {
         if (SpeechBubbleEnabled)
             throw new DialogException("Speech bubble not implemented.");
+
         if (DualBoxEnabled)
             await HandleDualBoxLineAsync(newLine);
         else
