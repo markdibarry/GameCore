@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using GameCore.Audio;
 using GameCore.Events;
-using GameCore.Input;
 using GameCore.Statistics;
 using GameCore.Utility;
 using Godot;
@@ -21,7 +20,7 @@ public abstract partial class BaseActorBody : CharacterBody2D
         Body = null!;
         BodySprite = null!;
         CollisionShape2D = null!;
-        ContextAreas = new();
+        ContextAreas = [];
         Direction = new(1, 1);
         Friction = 600;
         GroundedGravity = 0.05;
@@ -59,13 +58,16 @@ public abstract partial class BaseActorBody : CharacterBody2D
         GlobalPosition = _floatPosition;
         _move = Vector2.Zero;
         Actor?.Stats.Process(delta, !InActionSequence);
+
         foreach (IContextArea context in ContextAreas)
             context.TriggerContext(this);
+
         if (!InActionSequence)
         {
             StateController.UpdateStates(delta);
             HandleMove(delta);
         }
+
         _floatPosition = GlobalPosition;
         GlobalPosition = GlobalPosition.Round();
         InputHandler.Update();

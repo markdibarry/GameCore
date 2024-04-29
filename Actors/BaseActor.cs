@@ -41,11 +41,14 @@ public abstract class BaseActor : IDamageable
     public virtual T CreateBody<T>() where T : BaseActorBody
     {
         string? bodyPath = ActorsLocator.ActorBodyDB.GetById(ActorBodyId);
+
         if (bodyPath == null)
             throw new Exception($"No Body {ActorBodyId} found.");
+
         T actorBody = GDEx.Instantiate<T>(bodyPath);
         SetActorBody(actorBody);
         actorBody.SetActor(this);
+
         return actorBody;
     }
 

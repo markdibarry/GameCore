@@ -9,7 +9,7 @@ namespace GameCore.GUI;
 
 public partial class GUIController : CanvasLayer, IGUIController
 {
-    private readonly List<GUILayer> _guiLayers = new();
+    private readonly List<GUILayer> _guiLayers = [];
     private GUILayer? CurrentLayer => _guiLayers.Count > 0 ? _guiLayers[^1] : null;
     public bool MenuActive { get; private set; }
     public bool DialogActive { get; private set; }
@@ -35,10 +35,14 @@ public partial class GUIController : CanvasLayer, IGUIController
     public async Task CloseLayerAsync(bool preventAnimation = false, object? data = null)
     {
         GUILayer? layer = CurrentLayer;
+
         if (layer == null
             || layer.CurrentState == GUILayer.State.Closing
             || layer.CurrentState == GUILayer.State.Closed)
+        {
             return;
+        }
+
         await layer.CloseAsync(preventAnimation);
         RemoveChild(layer);
         layer.QueueFree();
@@ -58,9 +62,11 @@ public partial class GUIController : CanvasLayer, IGUIController
         {
             if (!preventAnimation)
                 await layer.CloseAsync();
+
             RemoveChild(layer);
             layer.QueueFree();
         }
+
         _guiLayers.Clear();
         UpdateCurrentGUI();
     }
@@ -85,9 +91,11 @@ public partial class GUIController : CanvasLayer, IGUIController
         }
         catch (Exception ex)
         {
-            GD.PrintErr(ex.Message);
+            GD.PushError(ex.Message);
+
             if (dialog == null)
                 return;
+
             await CloseLayerAsync(preventAnimation);
         }
     }
@@ -125,10 +133,13 @@ public partial class GUIController : CanvasLayer, IGUIController
         catch (Exception ex)
         {
             GD.PrintErr(ex.Message);
+
             if (menu == null)
                 return;
+
             if (menu is DialogOptionMenu)
                 await CloseLayerAsync(preventAnimation);
+
             await CloseLayerAsync(preventAnimation);
         }
     }

@@ -13,7 +13,7 @@ public abstract class InputHandler : IInputHandler
         Right = new InputAction(this, right);
     }
 
-    private readonly HashSet<IInputAction> _pendingActionsToClear = new();
+    private readonly HashSet<IInputAction> _pendingActionsToClear = [];
     public IInputAction Up { get; }
     public IInputAction Down { get; }
     public IInputAction Left { get; }

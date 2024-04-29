@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using Godot;
 using System.Text.Json.Serialization.Metadata;
+using Godot;
 
 namespace GameCore;
 
@@ -12,13 +12,13 @@ public class BaseSaveService<T> where T : IGameSave
 {
     private static readonly string s_saveFullPath = Config.SaveFullPath;
     private static readonly string s_saveNamePrefix = Config.SaveNamePrefix;
-    private static readonly string[] s_ignoredPropertyNames = new string[]
-    {
+    private static readonly string[] s_ignoredPropertyNames =
+    [
         nameof(GodotObject.NativeInstance),
         nameof(Resource.ResourceName),
         nameof(Resource.ResourcePath),
         nameof(Resource.ResourceLocalToScene)
-    };
+    ];
     private static readonly JsonSerializerOptions s_options = new()
     {
         WriteIndented = true,
@@ -34,8 +34,10 @@ public class BaseSaveService<T> where T : IGameSave
             return;
         if (typeInfo.Kind != JsonTypeInfoKind.Object)
             return;
+
         var props = typeInfo.Properties.Where(x => !s_ignoredPropertyNames.Contains(x.Name)).ToList();
         typeInfo.Properties.Clear();
+
         foreach (JsonPropertyInfo prop in props)
             typeInfo.Properties.Add(prop);
     }

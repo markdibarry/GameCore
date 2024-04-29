@@ -3,6 +3,5 @@
 public interface IStateMachine
 {
     void ExitState();
-    bool TrySwitchTo<T>() where T : IState;
-    void Update(double delta);
+    bool Update(double delta);
 }

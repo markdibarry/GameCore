@@ -1,39 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace GameCore.Actors;
 
 public abstract class StateMachine<TState> : IStateMachine
     where TState : IState
 {
-    public StateMachine(TState[] states)
-    {
-        _states = ToStatesDictionary(states);
-        FallbackState = states.First();
-        State = FallbackState;
-    }
-
     /// <summary>
     /// Cache of the states
     /// </summary>
     /// <returns></returns>
-    private readonly Dictionary<Type, TState> _states = new();
+    private readonly Dictionary<Type, TState> _states = [];
     /// <summary>
-    /// The current State.
+    /// Cache of the state transitions
+    /// </summary>
+    private readonly Dictionary<TState, Func<Type?>> _transitions = [];
+    /// <summary>
+    /// The current State
     /// </summary>
     /// <value></value>
-    public TState State { get; set; }
+    public TState State { get; private set; } = default!;
     /// <summary>
     /// State to return to as fallback
     /// </summary>
     /// <value></value>
-    public TState FallbackState { get; set; }
+    public TState InitialState { get; private set; } = default!;
 
     /// <summary>
     /// Switches to the FallbackState
     /// </summary>
-    public void Reset() => SwitchTo(FallbackState);
+    public void Reset() => SwitchTo(InitialState);
 
     /// <summary>
     /// Exits the State
@@ -41,25 +37,37 @@ public abstract class StateMachine<TState> : IStateMachine
     public void ExitState() => State.Exit();
 
     /// <summary>
-    /// Attempts to switch to a provided state
+    /// Updates the State
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
-    public bool TrySwitchTo<T>() where T : IState
+    public bool Update(double delta)
     {
-        if (!_states.TryGetValue(typeof(T), out TState? state))
-            return false;
-        SwitchTo(state);
-        return true;
+        // Get transition for state
+        if (_transitions.TryGetValue(State, out Func<Type?>? transition))
+        {
+            Type? type = transition();
+
+            if (type != null && _states.TryGetValue(type, out TState? state))
+            {
+                SwitchTo(state);
+                return true;
+            }
+        }
+
+        State.Update(delta);
+
+        return false;
     }
 
-    /// <summary>
-    /// Updates the State.
-    /// </summary>
-    public void Update(double delta)
+    protected void AddState(TState state, Func<Type?> transition)
     {
-        if (!State.TrySwitch(this))
-            State.Update(delta);
+        if (_states.Count == 0)
+        {
+            InitialState = state;
+            State = state;
+        }
+
+        _transitions.Add(state, transition);
+        _states.Add(state.GetType(), state);
     }
 
     /// <summary>
@@ -72,18 +80,5 @@ public abstract class StateMachine<TState> : IStateMachine
         State.Exit();
         State = newState;
         State.Enter();
-    }
-
-    /// <summary>
-    /// Converts state Array to Dictionary
-    /// </summary>
-    /// <param name="states"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    private static Dictionary<Type, TState> ToStatesDictionary(TState[] states)
-    {
-        if (states.Length == 0)
-            throw new Exception();
-        return states.ToDictionary(x => x.GetType(), x => x);
     }
 }

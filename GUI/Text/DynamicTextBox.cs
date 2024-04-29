@@ -12,7 +12,7 @@ public partial class DynamicTextBox : Control
     private int _currentPage;
     private float _displayHeight;
     private DynamicText _dynamicText = GDEx.Instantiate<DynamicText>(DynamicText.GetScenePath());
-    private IList<int> _pageBreakLineIndices = new[] { 0 };
+    private IList<int> _pageBreakLineIndices = [0];
     private Control _textWindow = new();
     [Export]
     public int CurrentPage

@@ -72,15 +72,18 @@ public interface IEventParser
     {
         int length = 1;
         i++;
+
         while (i < text.Length)
         {
             if (text[i] == ']' && text[i - 1] != '\\')
                 return ++length;
             else if (text[i] == '[' && text[i - 1] != '\\')
                 return length;
+
             length++;
             i++;
         }
+
         return length;
     }
 }
