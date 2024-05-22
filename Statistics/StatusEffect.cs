@@ -16,7 +16,7 @@ public class StatusEffect : IStatusEffect
     public event Action<Condition>? ConditionUpdated;
     public event Action<IStatusEffect, Condition>? ConditionChanged;
 
-    public void HandleChanges(BaseStats stats, Condition condition)
+    public void HandleChanges(StatsBase stats, Condition condition)
     {
         if (TickCondition == null || !TickCondition.CheckIfConditionsMet(stats))
             return;
@@ -24,7 +24,7 @@ public class StatusEffect : IStatusEffect
         TickCondition.Reset();
     }
 
-    public void SubscribeConditions(BaseStats stats)
+    public void SubscribeConditions(StatsBase stats)
     {
         Condition? nextCondition = TickCondition;
         while (nextCondition != null)
@@ -36,7 +36,7 @@ public class StatusEffect : IStatusEffect
         }
     }
 
-    public void UnsubscribeConditions(BaseStats stats)
+    public void UnsubscribeConditions(StatsBase stats)
     {
         Condition? nextCondition = TickCondition;
         while (nextCondition != null)

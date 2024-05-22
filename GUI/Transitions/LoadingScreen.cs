@@ -1,20 +1,23 @@
 ﻿using System.Threading.Tasks;
+using GameCore.Game;
 using Godot;
 
 namespace GameCore.GUI;
 
 public abstract partial class LoadingScreen : Control
 {
-    public ProgressBar ProgressBar { get; set; } = null!;
+    protected Loader? Loader { get; set; }
 
-    public override void _Ready()
+    public override void _PhysicsProcess(double delta)
     {
-        ProgressBar = GetNode<ProgressBar>("ProgressBar");
+        if (Loader != null && Loader.CurrentState == Loader.State.Loading)
+            Loader.Update();
     }
 
-    public void Update(int progress)
+    public virtual async Task LoadAsync(Loader loader, string[] paths)
     {
-        ProgressBar.Value = progress;
+        Loader = loader;
+        await Loader.LoadAsync(paths);
     }
 
     public virtual Task TransistionFrom()

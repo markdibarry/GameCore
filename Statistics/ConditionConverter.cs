@@ -10,6 +10,7 @@ public class ConditionConverter : JsonConverter<Condition>
     {
         Utf8JsonReader readerClone = reader;
         int val = 0;
+
         while (readerClone.Read())
         {
             if (readerClone.TokenType == JsonTokenType.PropertyName && readerClone.GetString() == nameof(Condition.ConditionType))
@@ -19,6 +20,7 @@ public class ConditionConverter : JsonConverter<Condition>
                 break;
             }
         }
+
         Type conditionType = StatsLocator.ConditionTypeDB.GetConditionType(val);
         return JsonSerializer.Deserialize(ref reader, conditionType) as Condition;
     }

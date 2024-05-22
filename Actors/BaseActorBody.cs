@@ -28,8 +28,7 @@ public abstract partial class BaseActorBody : CharacterBody2D
         HitBoxes = null!;
         StateController = null!;
         UpDirection = Vector2.Up;
-        WalkSpeed = 50;
-        MaxSpeed = WalkSpeed;
+        BaseSpeed = 50;
     }
 
     protected static IAudioService Audio { get; } = Locator.Audio;
@@ -44,7 +43,7 @@ public abstract partial class BaseActorBody : CharacterBody2D
     public AreaBoxContainer HitBoxes { get; private set; }
     public bool InActionSequence { get; private set; }
     public IStateController StateController { get; protected set; }
-    protected Node2D Body { get; set; } = null!;
+    public Node2D Body { get; protected set; } = null!;
     public event Action<BaseActorBody>? Freeing;
 
     public override void _Ready()
@@ -55,21 +54,14 @@ public abstract partial class BaseActorBody : CharacterBody2D
 
     public override void _PhysicsProcess(double delta)
     {
-        GlobalPosition = _floatPosition;
-        _move = Vector2.Zero;
         Actor?.Stats.Process(delta, !InActionSequence);
-
-        foreach (IContextArea context in ContextAreas)
-            context.TriggerContext(this);
 
         if (!InActionSequence)
         {
             StateController.UpdateStates(delta);
-            HandleMove(delta);
+            MoveAndSlide();
         }
 
-        _floatPosition = GlobalPosition;
-        GlobalPosition = GlobalPosition.Round();
         InputHandler.Update();
     }
 
@@ -137,7 +129,6 @@ public abstract partial class BaseActorBody : CharacterBody2D
 
     protected virtual void Init()
     {
-        _floatPosition = GlobalPosition;
         SetHitBoxes();
         SetRole(Role);
         InitState();
@@ -148,6 +139,7 @@ public abstract partial class BaseActorBody : CharacterBody2D
     {
         if (Actor == null)
             return;
+
         foreach (BaseHurtBox hurtbox in HurtBoxes.GetChildren<BaseHurtBox>())
             hurtbox.DamageRequested += Actor.Stats.OnDamageReceived;
     }

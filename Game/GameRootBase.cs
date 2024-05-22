@@ -8,31 +8,21 @@ using Godot;
 
 namespace GameCore;
 
-public abstract partial class BaseGameRoot : Node
+public abstract partial class GameRootBase(string gameSessionScenePath, string titleMenuScenePath) : Node
 {
-    protected BaseGameRoot(
-        string gameSessionScenePath,
-        string titleMenuScenePath,
-        BaseTransitionController? transitionController = null)
-    {
-        GameSessionScenePath = gameSessionScenePath;
-        TitleMenuScenePath = titleMenuScenePath;
-        TransitionController = transitionController ?? new BaseTransitionController();
-    }
-
-    public string GameSessionScenePath { get; }
-    public string TitleMenuScenePath { get; }
+    public string GameSessionScenePath { get; } = gameSessionScenePath;
+    public string TitleMenuScenePath { get; } = titleMenuScenePath;
     public IAudioService AudioController { get; protected set; } = null!;
     public GameCamera GameCamera { get; protected set; } = null!;
     public Node2D GameDisplay { get; set; } = null!;
     public Node2D GameSessionContainer { get; set; } = null!;
     public GUIController GUIController { get; protected set; } = null!;
-    public TransitionLayer Transition { get; protected set; } = null!;
-    public BaseGameSession? GameSession { get; private set; }
+    public TransitionLayer GameTransition { get; protected set; } = null!;
+    public GameSessionBase? GameSession { get; private set; }
     public GameState GameState { get; } = new();
     public abstract IGUIInputHandler MenuInput { get; }
     public abstract IInputHandler PlayerOneInput { get; }
-    public BaseTransitionController TransitionController { get; }
+    public TransitionController TransitionController { get; } = new();
 
     public override void _Ready()
     {
@@ -47,7 +37,7 @@ public abstract partial class BaseGameRoot : Node
         GUIController = GameDisplay.GetNode<GUIController>("GUIController");
         AudioController = GameDisplay.GetNode<IAudioService>("AudioController");
         GameSessionContainer = GameDisplay.GetNode<Node2D>("GameSessionContainer");
-        Transition = GameDisplay.GetNode<TransitionLayer>("Transition");
+        GameTransition = GameDisplay.GetNode<TransitionLayer>("GameTransition");
         GameCamera = GameDisplay.GetNode<GameCamera>("GameCamera");
     }
 
@@ -63,7 +53,6 @@ public abstract partial class BaseGameRoot : Node
     public override void _Process(double delta)
     {
         HandleInput(delta);
-        TransitionController.Update();
     }
 
     public virtual async Task RemoveSession()
@@ -79,7 +68,7 @@ public abstract partial class BaseGameRoot : Node
 
     public virtual async Task StartNewSession(IGameSave gameSave)
     {
-        GameSession = GDEx.Instantiate<BaseGameSession>(GameSessionScenePath);
+        GameSession = GDEx.Instantiate<GameSessionBase>(GameSessionScenePath);
         GameSessionContainer.AddChild(GameSession);
         GameSession.Init(GUIController, gameSave);
         await GUIController.CloseAllLayersAsync(true);
@@ -89,20 +78,19 @@ public abstract partial class BaseGameRoot : Node
 
     public virtual void ResetToTitleScreen(string loadingScreenPath, string transitionA, string transitionB)
     {
-        TransitionRequest request = new(
-            loadingScreenPath: loadingScreenPath,
+        _ = TransitionController.TransitionInOutAsync(
             transitionType: TransitionType.Game,
-            transitionA: transitionA,
-            transitionB: transitionB,
-            paths: new string[] { TitleMenuScenePath },
-            callback: async (loader) =>
+            transitionInPath: transitionA,
+            transitionOutPath: transitionB,
+            loadingScreenPath: loadingScreenPath,
+            paths: [TitleMenuScenePath],
+            callback: async () =>
             {
-                PackedScene? titleMenuScene = loader.GetObject<PackedScene>(TitleMenuScenePath);
+                PackedScene? titleMenuScene = (PackedScene)ResourceLoader.Load(TitleMenuScenePath)!;
                 AudioController.Reset();
                 await RemoveSession();
                 await GUIController.OpenMenuAsync(titleMenuScene, true);
             });
-        TransitionController.RequestTransition(request);
     }
 
     protected void HandleInput(double delta)

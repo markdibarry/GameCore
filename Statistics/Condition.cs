@@ -39,28 +39,32 @@ public abstract partial class Condition : Resource
     public event Action<Condition>? StatusChanged;
     public event Action<Condition>? Updated;
 
-    public bool CheckIfConditionsMet(BaseStats stats)
+    public bool CheckIfConditionsMet(StatsBase stats)
     {
         ConditionMet = CheckIfConditionMet(stats);
+
         if (ConditionMet)
         {
             if (AdditionalCondition?.AdditionalLogicOp == LogicOp.And)
                 return AdditionalCondition.CheckIfConditionsMet(stats);
+
             return true;
         }
         else
         {
             if (AdditionalCondition?.AdditionalLogicOp == LogicOp.Or)
                 return AdditionalCondition.CheckIfConditionsMet(stats);
+
             return false;
         }
     }
 
     public virtual void Reset() => AdditionalCondition?.Reset();
 
-    public void UpdateCondition(BaseStats stats)
+    public void UpdateCondition(StatsBase stats)
     {
         bool result = CheckIfConditionMet(stats);
+
         if (result != ConditionMet)
         {
             ConditionMet = result;
@@ -69,8 +73,8 @@ public abstract partial class Condition : Resource
     }
 
     public abstract Condition Clone();
-    public abstract void SubscribeEvents(BaseStats stats);
-    public abstract void UnsubscribeEvents(BaseStats stats);
-    protected abstract bool CheckIfConditionMet(BaseStats stats);
+    public abstract void SubscribeEvents(StatsBase stats);
+    public abstract void UnsubscribeEvents(StatsBase stats);
+    protected abstract bool CheckIfConditionMet(StatsBase stats);
     protected void RaiseConditionUpdated() => Updated?.Invoke(this);
 }

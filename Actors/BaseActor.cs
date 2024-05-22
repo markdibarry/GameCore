@@ -30,7 +30,7 @@ public abstract class BaseActor : IDamageable
     public string EquipmentSlotPresetId { get; }
     public BaseInventory Inventory { get; set; }
     public string Name { get; set; }
-    public abstract BaseStats Stats { get; }
+    public abstract StatsBase Stats { get; }
 
     public event Action<BaseActor>? Defeated;
     public event Action<BaseActor, IDamageResult>? DamageReceived;

@@ -7,13 +7,13 @@ using Godot;
 
 namespace GameCore;
 
-public abstract partial class BaseGameSession : Node2D
+public abstract partial class GameSessionBase : Node2D
 {
     protected Node2D AreaSceneContainer { get; set; } = null!;
-    protected AHUD HUD { get; set; } = null!;
+    protected HUDBase HUD { get; set; } = null!;
     protected GUIController GUIController { get; set; } = null!;
-    public BaseAreaScene? CurrentAreaScene { get; private set; }
-    public TransitionLayer Transition { get; private set; } = null!;
+    public AreaSceneBase? CurrentAreaScene { get; private set; }
+    public TransitionLayer SessionTransition { get; private set; } = null!;
     public bool Paused { get; private set; }
 
     public override void _Ready()
@@ -23,7 +23,7 @@ public abstract partial class BaseGameSession : Node2D
 
     public abstract void HandleInput(IGUIInputHandler menuInput, double delta);
 
-    public virtual void AddAreaScene(BaseAreaScene areaScene)
+    public virtual void AddAreaScene(AreaSceneBase areaScene)
     {
         if (IsInstanceValid(CurrentAreaScene))
         {
@@ -88,8 +88,8 @@ public abstract partial class BaseGameSession : Node2D
 
     protected virtual void SetNodeReferences()
     {
-        HUD = GetNode<AHUD>("HUD");
+        HUD = GetNode<HUDBase>("HUD");
         AreaSceneContainer = GetNode<Node2D>("AreaSceneContainer");
-        Transition = GetNode<TransitionLayer>("Transition");
+        SessionTransition = GetNode<TransitionLayer>("SessionTransition");
     }
 }

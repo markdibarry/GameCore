@@ -10,9 +10,9 @@ public class StatusEffectData
     public string PastTenseName { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
     public int EffectType { get; init; }
-    public Action<BaseStats, IStatusEffect>? EnterEffect { get; init; }
-    public Action<BaseStats, IStatusEffect>? ExitEffect { get; init; }
-    public IReadOnlyCollection<Modifier> EffectModifiers { get; init; } = Array.Empty<Modifier>();
+    public Action<StatsBase, IStatusEffect>? EnterEffect { get; init; }
+    public Action<StatsBase, IStatusEffect>? ExitEffect { get; init; }
+    public IReadOnlyCollection<Modifier> EffectModifiers { get; init; } = [];
     public Condition? TickCondition { get; init; }
-    public Action<BaseStats, IStatusEffect>? TickEffect { get; init; }
+    public Action<StatsBase, IStatusEffect>? TickEffect { get; init; }
 }

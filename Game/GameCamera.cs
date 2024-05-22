@@ -1,20 +1,24 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using GameCore.Utility;
+using GameCore.AreaScenes;
 using Godot;
+using GameCore.Utility;
 
 namespace GameCore;
 
 public partial class GameCamera : Camera2D
 {
-    public Node2D? CurrentTarget { get; set; }
+    public Node2D? CurrentTarget
+    {
+        get => _currentTarget;
+        set => SetCurrentTarget(value);
+    }
+    private Node2D? _currentTarget;
     private Vector2 _viewSize;
-    private int _goalLimitTop;
-    private int _goalLimitBottom;
-    private int _goalLimitLeft;
-    private int _goalLimitRight;
-    private bool _limitsDirty;
-    private readonly int _limitUpdateSpeed = 3;
+    private readonly float _limitUpdateSpeed = 3 * 60;
+    private Tween? _limitTween;
+    private bool _switching;
+    private float _switchSpeed;
 
     public override void _Ready()
     {
@@ -23,25 +27,48 @@ public partial class GameCamera : Camera2D
 
     public override void _PhysicsProcess(double delta)
     {
-        if (CurrentTarget != null)
+        if (Godot.Input.IsActionJustPressed("test"))
         {
-            if (IsInstanceValid(CurrentTarget))
-                GlobalPosition = CurrentTarget.GlobalPosition;
+            if (CurrentTarget == GetNode<Node2D>("../GameSessionContainer/GameSession/AreaSceneContainer/DemoLevel1/Actors/Twosen"))
+            {
+                CurrentTarget = GetNode<Node2D>("../GameSessionContainer/GameSession/AreaSceneContainer/DemoLevel1/Scenery/Environment/Barrels/Barrel5");
+            }
             else
-                CurrentTarget = null;
+            {
+                CurrentTarget = GetNode<Node2D>("../GameSessionContainer/GameSession/AreaSceneContainer/DemoLevel1/Actors/Twosen");
+            }
+
         }
 
-        if (_limitsDirty)
-            UpdateLimits();
+        if (CurrentTarget == null)
+            return;
+
+        if (!IsInstanceValid(CurrentTarget))
+        {
+            CurrentTarget = null;
+            return;
+        }
+
+        if (_switching)
+        {
+            GlobalPosition = GlobalPosition.MoveToward(CurrentTarget.GlobalPosition.Round(), _switchSpeed);
+
+            if (GlobalPosition.DistanceTo(CurrentTarget.GlobalPosition.Round()) < 1)
+            {
+                _switching = false;
+                _switchSpeed = 0;
+            }
+        }
+        else
+        {
+            GlobalPosition = CurrentTarget.GlobalPosition.Round();
+        }
     }
 
     public Rect2 GetRect()
     {
-        Vector2 center = GetScreenCenterPosition();
-        return new(new(center.X - (_viewSize.X * 0.5f), center.Y - (_viewSize.Y * 0.5f)), _viewSize);
+        return new(GetScreenCenterPosition() - _viewSize * 0.5f, _viewSize);
     }
-
-    public bool IsInView(Vector2 position) => GetRect().HasPoint(position);
 
     public IEnumerable<T> FilterInView<T>(IEnumerable<T> node) where T : Node2D
     {
@@ -49,54 +76,84 @@ public partial class GameCamera : Camera2D
         return node.Where(x => rect.HasPoint(x.GlobalPosition));
     }
 
-    public void UpdateLimits()
+    public void SetLimit(Node2D node2d)
     {
-        if (Locator.Root.GameState.MenuActive)
+        AreaCameraLimit? acl = node2d.GetFirstAreaAtGlobalPosition<AreaCameraLimit>(AreaCameraLimit.CameraLimitLayer);
+
+        if (acl == null)
             return;
-        bool finishedUpdating = true;
-        if (_goalLimitTop != LimitTop)
-        {
-            LimitTop = LimitTop.MoveTowards(_goalLimitTop, _limitUpdateSpeed);
-            finishedUpdating = false;
-        }
-        if (_goalLimitRight != LimitRight)
-        {
-            LimitRight = LimitRight.MoveTowards(_goalLimitRight, _limitUpdateSpeed);
-            finishedUpdating = false;
-        }
-        if (_goalLimitBottom != LimitBottom)
-        {
-            LimitBottom = LimitBottom.MoveTowards(_goalLimitBottom, _limitUpdateSpeed);
-            finishedUpdating = false;
-        }
-        if (_goalLimitLeft != LimitLeft)
-        {
-            LimitLeft = LimitLeft.MoveTowards(_goalLimitLeft, _limitUpdateSpeed);
-            finishedUpdating = false;
-        }
-        if (finishedUpdating)
-            _limitsDirty = false;
+
+        SetLimit(acl.LimitTop, acl.LimitRight, acl.LimitBottom, acl.LimitLeft);
     }
 
-    public void SetGoalLimits(int top, int right, int bottom, int left)
+    public void SetLimit(int top, int right, int bottom, int left)
     {
-        _limitsDirty = true;
-        Vector2 cameraPosition = GetScreenCenterPosition() - _viewSize * 0.5f;
-        _goalLimitTop = top;
-        _goalLimitRight = right;
-        _goalLimitBottom = bottom;
-        _goalLimitLeft = left;
+        _limitTween?.Kill();
+        _limitTween = null;
 
-        if (cameraPosition.Y < _goalLimitTop)
-            LimitTop = (int)cameraPosition.Y;
+        LimitTop = top;
+        LimitRight = right;
+        LimitBottom = bottom;
+        LimitLeft = left;
+    }
 
-        if (cameraPosition.X + _viewSize.X > _goalLimitRight)
-            LimitRight = (int)(cameraPosition.X + _viewSize.X);
+    public void TweenLimit(Node2D node2d)
+    {
+        AreaCameraLimit? acl = node2d.GetFirstAreaAtGlobalPosition<AreaCameraLimit>(AreaCameraLimit.CameraLimitLayer);
 
-        if (cameraPosition.Y + _viewSize.Y > _goalLimitBottom)
-            LimitBottom = (int)(cameraPosition.Y + _viewSize.Y);
+        if (acl == null)
+            return;
 
-        if (cameraPosition.X < _goalLimitLeft)
-            LimitLeft = (int)cameraPosition.X;
+        TweenLimit(acl.LimitTop, acl.LimitRight, acl.LimitBottom, acl.LimitLeft);
+    }
+
+    public void TweenLimit(int top, int right, int bottom, int left)
+    {
+        _limitTween?.Kill();
+        _limitTween = CreateTween().SetParallel();
+
+        Rect2 cameraRect = GetRect();
+
+        if (top > cameraRect.Position.Y)
+            LimitTop = (int)cameraRect.Position.Y;
+
+        if (right < cameraRect.End.X)
+            LimitRight = (int)cameraRect.End.X;
+
+        if (bottom < cameraRect.End.Y)
+            LimitBottom = (int)cameraRect.End.Y;
+
+        if (left > cameraRect.Position.X)
+            LimitLeft = (int)cameraRect.Position.X;
+
+        AddTweenProperty(_limitTween, Camera2D.PropertyName.LimitTop, top, cameraRect.Position.Y);
+        AddTweenProperty(_limitTween, Camera2D.PropertyName.LimitRight, right, cameraRect.End.X);
+        AddTweenProperty(_limitTween, Camera2D.PropertyName.LimitBottom, bottom, cameraRect.End.Y);
+        AddTweenProperty(_limitTween, Camera2D.PropertyName.LimitLeft, left, cameraRect.Position.X);
+
+        void AddTweenProperty(Tween tween, string propertyName, int target, float current)
+        {
+            float time = Mathf.Abs(target - current) / _limitUpdateSpeed;
+            tween.TweenProperty(this, propertyName, target, time);
+        }
+    }
+
+    private void SetCurrentTarget(Node2D? node2d)
+    {
+        _currentTarget = node2d;
+        _switchSpeed = 0;
+        _switching = false;
+
+        if (_currentTarget == null)
+            return;
+
+        float distance = GlobalPosition.DistanceTo(_currentTarget.GlobalPosition.Round());
+
+        if (distance < 1)
+            return;
+
+        _switching = true;
+        _switchSpeed = distance / 60;
+
     }
 }

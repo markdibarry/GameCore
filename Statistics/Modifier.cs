@@ -22,7 +22,7 @@ public partial class Modifier : Resource
         StatType = statType;
         Op = op;
         Value = value;
-        Conditions = conditions ?? new();
+        Conditions = conditions ?? [];
         IsHidden = isHidden;
     }
 
@@ -49,7 +49,7 @@ public partial class Modifier : Resource
     private int _statType;
     [Export] public bool IsHidden { get; set; }
     [Export] public ModOp Op { get; set; }
-    [Export] public GCol.Array<Condition> Conditions { get; set; } = new();
+    [Export] public GCol.Array<Condition> Conditions { get; set; } = [];
     public int StatType
     {
         get => _statType;
@@ -64,12 +64,12 @@ public partial class Modifier : Resource
     // TODO Add special case handling i.e. +5% for every 100 enemies killed
     public int Apply(int baseValue) => Op.Compute(baseValue, Value);
 
-    public static bool ShouldDeactivate(BaseStats stats, IEnumerable<Condition> conditions)
+    public static bool ShouldDeactivate(StatsBase stats, IEnumerable<Condition> conditions)
     {
         return conditions.Any(x => x.ResultType.HasFlag(ConditionResultType.Deactivate) && x.CheckIfConditionsMet(stats));
     }
 
-    public static bool ShouldRemove(BaseStats stats, IEnumerable<Condition> conditions)
+    public static bool ShouldRemove(StatsBase stats, IEnumerable<Condition> conditions)
     {
         return conditions.Any(x => x.ResultType.HasFlag(ConditionResultType.Remove) && x.CheckIfConditionsMet(stats));
     }

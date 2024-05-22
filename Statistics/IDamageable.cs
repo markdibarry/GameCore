@@ -2,6 +2,6 @@
 
 public interface IDamageable
 {
-    BaseStats Stats { get; }
+    StatsBase Stats { get; }
     string Name { get; }
 }

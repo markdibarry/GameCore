@@ -6,7 +6,7 @@ using Godot;
 
 namespace GameCore.Events;
 
-public partial class DialogArea : Area2D, IContextArea
+public partial class DialogArea : ContextArea
 {
     public static string GetScenePath() => GDEx.GetScenePath();
     private static readonly GUIController s_guiController = Locator.Root.GUIController;
@@ -27,8 +27,6 @@ public partial class DialogArea : Area2D, IContextArea
         }
     }
     [Export]
-    public bool IsActive { get; set; } = true;
-    [Export]
     public bool Hint
     {
         get => _colorRect?.Visible ?? false;
@@ -42,25 +40,10 @@ public partial class DialogArea : Area2D, IContextArea
     public override void _Ready()
     {
         _colorRect = GetNode<ColorRect>("ColorRect");
-        BodyEntered += OnBodyEntered;
-        BodyExited += OnBodyExited;
+        base._Ready();
     }
 
-    public void OnBodyEntered(Node body)
-    {
-        if (body is not BaseActorBody actor)
-            return;
-        actor.ContextAreas.Add(this);
-    }
-
-    public void OnBodyExited(Node body)
-    {
-        if (body is not BaseActorBody actor)
-            return;
-        actor.ContextAreas.Remove(this);
-    }
-
-    public void TriggerContext(BaseActorBody actor)
+    public override void TriggerContext(BaseActorBody actor)
     {
         if (!IsActive
             || s_gameState.GUIActive

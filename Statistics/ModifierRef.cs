@@ -46,11 +46,11 @@ public class ModifierRef
             condition.Reset();
     }
 
-    public bool ShouldDeactivate(BaseStats stats) => Modifier.ShouldDeactivate(stats, Conditions);
+    public bool ShouldDeactivate(StatsBase stats) => Modifier.ShouldDeactivate(stats, Conditions);
 
-    public bool ShouldRemove(BaseStats stats) => Modifier.ShouldRemove(stats, Conditions);
+    public bool ShouldRemove(StatsBase stats) => Modifier.ShouldRemove(stats, Conditions);
 
-    public void SubscribeConditions(BaseStats stats)
+    public void SubscribeConditions(StatsBase stats)
     {
         foreach (Condition condition in Conditions)
         {
@@ -65,7 +65,7 @@ public class ModifierRef
         }
     }
 
-    public void UnsubscribeConditions(BaseStats stats)
+    public void UnsubscribeConditions(StatsBase stats)
     {
         foreach (Condition condition in Conditions)
         {

@@ -5,11 +5,14 @@ namespace GameCore.Utility;
 
 public static class MathExtensions
 {
-    public static Vector2 GDExSign(this Vector2 vec)
+    public static float JumpHeightToVelocity(float jumpHeight, float timeToJumpPeak)
     {
-        var x = vec.X > 0 ? 1 : vec.X < 0 ? -1 : 0;
-        var y = vec.Y > 0 ? 1 : vec.Y < 0 ? -1 : 0;
-        return new Vector2(x, y);
+        return 2.0f * jumpHeight / timeToJumpPeak * -1;
+    }
+
+    public static float JumpHeightToGravity(float jumpHeight, float timeToJumpPeak)
+    {
+        return -2.0f * jumpHeight / (timeToJumpPeak * timeToJumpPeak) * -1;
     }
 
     public static float MoveToward(this float from, double to, double delta)

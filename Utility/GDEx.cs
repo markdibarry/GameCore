@@ -19,6 +19,7 @@ public static class GDEx
     {
         IEnumerator<T> enumerator = ((IEnumerable<T>)array).GetEnumerator();
         enumerator.MoveNext();
+
         return enumerator;
     }
 
@@ -41,7 +42,9 @@ public static class GDEx
     {
         if (dict.TryGetValue(key, out TValue? stat))
             return stat;
+
         dict[key] = new TValue();
+
         return dict[key];
     }
 
@@ -53,16 +56,18 @@ public static class GDEx
     /// <returns></returns>
     public static IEnumerable<T> OrEmpty<T>(this IEnumerable<T>? source)
     {
-        return source ?? Array.Empty<T>();
+        return source ?? [];
     }
 
     public static string GetScenePath([CallerFilePath] string csPath = "")
     {
         string godotRoot = Config.ProjectFullPath;
+
         if (!csPath.EndsWith(".cs"))
             throw new Exception($"Caller '{csPath}' is not a .cs file.");
         if (!csPath.StartsWith(godotRoot, StringComparison.InvariantCultureIgnoreCase))
             throw new Exception($"Caller '{csPath}' cannot be found inside '{godotRoot}'.");
+
         return ProjectSettings.LocalizePath(Path.ChangeExtension(csPath, ".tscn"));
     }
 
@@ -88,6 +93,7 @@ public static class GDEx
         {
             string[] strArr = message.Split("_");
             strArr = strArr.Select(x => x.Length > 2 ? x[..3] : x).ToArray();
+
             if (strArr.Length > 2)
                 message = strArr[1] + strArr[2];
             else if (strArr.Length == 2)

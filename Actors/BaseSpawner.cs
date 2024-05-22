@@ -11,7 +11,6 @@ public abstract partial class BaseSpawner : Node2D
 {
     protected static IActorDataDB ActorDataDB { get; set; } = ActorsLocator.ActorDataDB;
     private string _actorDataId = string.Empty;
-    private bool _ready;
     public bool Respawn { get; set; }
     public bool OffScreen { get; set; }
     public bool CreateUnique
@@ -96,8 +95,6 @@ public abstract partial class BaseSpawner : Node2D
 
     public override void _Ready()
     {
-        _ready = true;
-
         if (Engine.IsEditorHint())
         {
             ChildEnteredTree += OnChildEnteredTree;
@@ -146,7 +143,7 @@ public abstract partial class BaseSpawner : Node2D
 
     public void OnCreateUnique()
     {
-        if (!Engine.IsEditorHint() || !_ready)
+        if (!Engine.IsEditorHint() || !IsNodeReady())
             return;
 
         ActorData = ActorDataDB.GetData<BaseActorData>(ActorDataId)?.Clone();

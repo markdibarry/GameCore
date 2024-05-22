@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://GameCore/GUI/GUIController.cs" id="2_vvotj"]
 [ext_resource type="PackedScene" uid="uid://f1ad6egrl20n" path="res://GameCore/GUI/Transitions/TransitionLayer.tscn" id="3_37nru"]
 
-[node name="BaseGameRoot" type="Node"]
+[node name="GameRootBase" type="Node"]
 process_mode = 3
 
 [node name="MainBackground" type="CanvasLayer" parent="."]
@@ -33,5 +33,6 @@ script = ExtResource("1_k1w7h")
 layer = 60
 script = ExtResource("2_vvotj")
 
-[node name="Transition" parent="GameDisplay" instance=ExtResource("3_37nru")]
+[node name="GameTransition" parent="GameDisplay" node_paths=PackedStringArray("LoadingScreenContainer") instance=ExtResource("3_37nru")]
 layer = 90
+LoadingScreenContainer = NodePath("LoadingScreenContainer")
