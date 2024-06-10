@@ -36,7 +36,7 @@ public abstract class BaseActor : IDamageable
     public event Action<BaseActor, IDamageResult>? DamageReceived;
     public event Action<BaseActor, Modifier, ModChangeType>? ModChanged;
     public event Action<BaseActor>? StatsChanged;
-    public event Action<BaseActor, int, ModChangeType>? StatusEffectChanged;
+    public event Action<BaseActor, string, ModChangeType>? StatusEffectChanged;
 
     public virtual T CreateBody<T>() where T : BaseActorBody
     {
@@ -74,21 +74,21 @@ public abstract class BaseActor : IDamageable
 
     protected abstract void OnEquipmentSet(EquipmentSlot slot, BaseItem? oldItem, BaseItem? newItem);
 
-    private void OnModChanged(Modifier mod, ModChangeType changeType)
+    private void OnModChanged(StatsBase stats, Modifier mod, ModChangeType changeType)
     {
         ModChanged?.Invoke(this, mod, changeType);
     }
 
-    private void OnStatsChanged() => StatsChanged?.Invoke(this);
+    private void OnStatsChanged(StatsBase stats) => StatsChanged?.Invoke(this);
 
-    private void OnDamageRecieved(IDamageResult damageResult)
+    private void OnDamageRecieved(StatsBase stats, IDamageResult damageResult)
     {
         damageResult.RecieverName = Name;
         DamageReceived?.Invoke(this, damageResult);
     }
 
-    private void OnStatusEffectChanged(int statusEffectType, ModChangeType changeType)
+    private void OnStatusEffectChanged(StatsBase stats, string statusEffectTypeId, ModChangeType changeType)
     {
-        StatusEffectChanged?.Invoke(this, statusEffectType, changeType);
+        StatusEffectChanged?.Invoke(this, statusEffectTypeId, changeType);
     }
 }

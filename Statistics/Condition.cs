@@ -1,80 +1,147 @@
 ﻿using System;
 using System.Text.Json.Serialization;
-using Godot;
+using GameCore.Utility;
 
 namespace GameCore.Statistics;
 
-[GlobalClass]
 [JsonConverter(typeof(ConditionConverter))]
-public abstract partial class Condition : Resource
+public abstract record Condition : IPoolable<Condition>
 {
-    protected Condition() { }
+    public Condition() { }
 
     protected Condition(Condition condition)
-        : this(condition.ResultType, condition.AdditionalLogicOp, condition.AdditionalCondition)
     {
+        ConditionType = condition.ConditionType;
+
+        if (condition.AndCondition != null)
+            AndCondition = condition.AndCondition with { };
+
+        if (condition.OrCondition != null)
+            OrCondition = condition.OrCondition with { };
     }
 
     protected Condition(
-        ConditionResultType resultType,
-        LogicOp additionalLogicOp,
-        Condition? additionalCondition)
+        string conditionType,
+        Condition? andCondition,
+        Condition? orCondition)
     {
-        ResultType = resultType;
-        AdditionalLogicOp = additionalLogicOp;
-        AdditionalCondition = additionalCondition?.Clone();
+        ConditionType = conditionType;
+
+        if (andCondition != null)
+            AndCondition = andCondition with { };
+
+        if (orCondition != null)
+            OrCondition = orCondition with { };
     }
 
-    public abstract int ConditionType { get; }
-    [Export]
-    public ConditionResultType ResultType { get; set; } = ConditionResultType.Remove;
-    [Export]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    private bool _conditionMet;
+    private bool _initialized;
+    [JsonPropertyOrder(-5)]
+    public string ConditionType { get; set; } = string.Empty;
     [JsonConverter(typeof(ConditionConverter))]
-    public Condition? AdditionalCondition { get; set; }
-    [Export]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-    public LogicOp AdditionalLogicOp { get; set; }
-    protected bool ConditionMet { get; set; }
-    public event Action<Condition>? StatusChanged;
-    public event Action<Condition>? Updated;
+    [JsonPropertyOrder(20)]
+    public Condition? AndCondition { get; set; }
+    [JsonConverter(typeof(ConditionConverter))]
+    [JsonPropertyOrder(21)]
+    public Condition? OrCondition { get; set; }
+    public event Action<Condition>? Changed;
 
-    public bool CheckIfConditionsMet(StatsBase stats)
+    public bool CheckAllConditions(StatsBase? stats = null)
     {
-        ConditionMet = CheckIfConditionMet(stats);
-
-        if (ConditionMet)
+        if (stats != null)
         {
-            if (AdditionalCondition?.AdditionalLogicOp == LogicOp.And)
-                return AdditionalCondition.CheckIfConditionsMet(stats);
-
-            return true;
+            if (IsConditionMet(stats))
+                return AndCondition?.IsConditionMet(stats) ?? true;
+            else
+                return OrCondition?.IsConditionMet(stats) ?? false;
         }
         else
         {
-            if (AdditionalCondition?.AdditionalLogicOp == LogicOp.Or)
-                return AdditionalCondition.CheckIfConditionsMet(stats);
+            if (!_initialized)
+                throw new Exception("Condition not initialized.");
 
-            return false;
+            if (_conditionMet)
+                return AndCondition?.CheckAllConditionsCached() ?? true;
+            else
+                return OrCondition?.CheckAllConditionsCached() ?? false;
         }
     }
 
-    public virtual void Reset() => AdditionalCondition?.Reset();
-
-    public void UpdateCondition(StatsBase stats)
+    public void InitializeConditions(StatsBase stats)
     {
-        bool result = CheckIfConditionMet(stats);
+        if (_initialized)
+            return;
 
-        if (result != ConditionMet)
-        {
-            ConditionMet = result;
-            StatusChanged?.Invoke(this);
-        }
+        UpdateCondition(stats);
+
+        AndCondition?.InitializeConditions(stats);
+        OrCondition?.InitializeConditions(stats);
+
+        _initialized = true;
     }
 
-    public abstract Condition Clone();
+    public virtual void Reset()
+    {
+        AndCondition?.Reset();
+        OrCondition?.Reset();
+    }
+
+    public void Init(Condition? condition)
+    {
+        _initialized = false;
+        _conditionMet = false;
+        ConditionType = condition?.ConditionType ?? string.Empty;
+
+        if (condition?.AndCondition != null)
+            AndCondition = condition.AndCondition with { };
+        else
+            AndCondition = default;
+
+        if (condition?.OrCondition != null)
+            OrCondition = condition.OrCondition with { };
+        else
+            OrCondition = default;
+
+        Changed = default;
+        ResetCondition();
+    }
+
+    /// <summary>
+    /// Updates the _conditionMet flag and returns true if the result is different
+    /// than the previous value.
+    /// </summary>
+    /// <param name="stats"></param>
+    /// <returns></returns>
+    public bool UpdateCondition(StatsBase stats)
+    {
+        bool result = IsConditionMet(stats);
+
+        if (result != _conditionMet)
+        {
+            _conditionMet = result;
+            return true;
+        }
+
+        return false;
+    }
+
     public abstract void SubscribeEvents(StatsBase stats);
     public abstract void UnsubscribeEvents(StatsBase stats);
-    protected abstract bool CheckIfConditionMet(StatsBase stats);
-    protected void RaiseConditionUpdated() => Updated?.Invoke(this);
+    protected abstract bool IsConditionMet(StatsBase stats);
+    protected abstract bool ResetCondition();
+    protected void RaiseConditionChanged()
+    {
+        Changed?.Invoke(this);
+    }
+
+    private bool CheckAllConditionsCached()
+    {
+        if (!_initialized)
+            throw new Exception("Condition not initialized.");
+
+        if (_conditionMet)
+            return AndCondition?.CheckAllConditionsCached() ?? true;
+        else
+            return OrCondition?.CheckAllConditionsCached() ?? false;
+    }
 }

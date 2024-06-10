@@ -1,14 +1,24 @@
-﻿using Godot;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Godot;
 
 namespace GameCore.Utility;
 
 public static class GDEx
 {
+    public static Dictionary<T, int> ToIndexedDictionary<T>(this T[] values) where T : notnull
+    {
+        Dictionary<T, int> order = [];
+
+        for (int i = 0; i < values.Length; i++)
+            order.TryAdd(values[i], i);
+
+        return order;
+    }
+
     /// <summary>
     /// Gets and initializes an enumerator to the first item of an array.
     /// </summary>
@@ -40,8 +50,8 @@ public static class GDEx
     /// <returns>The value at the key's location</returns>
     public static TValue GetOrAddNew<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key) where TValue : new()
     {
-        if (dict.TryGetValue(key, out TValue? stat))
-            return stat;
+        if (dict.TryGetValue(key, out TValue? item))
+            return item;
 
         dict[key] = new TValue();
 

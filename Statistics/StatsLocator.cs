@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GameCore.Statistics;
 
@@ -33,27 +34,39 @@ public static class StatsLocator
 
     private class NullStatusEffectDB : IStatusEffectDB
     {
-        public StatusEffectData? GetEffectData(int type) => null;
+        public bool TryGetEffectData(string statTypeId, [MaybeNullWhen(false)] out StatusEffectData data)
+        {
+            data = default;
+            return false;
+        }
     }
 
     private class NullStatTypeDB : IStatTypeDB
     {
-        public string[] GetTypeNames() => Array.Empty<string>();
-        public string[]? GetValueEnumOptions(int statType) => Array.Empty<string>();
+        public string[] GetTypeNames() => [];
+        public string[]? GetValueEnumOptions(string statTypeId) => [];
     }
 
     private class NullConditionTypeDB : IConditionTypeDB
     {
-        public Type? GetConditionType(int conditionType) => null;
+        public Condition CloneCondition(Condition condition)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Type? GetConditionType(string conditionType)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     private class NullStatusEffectModifierFactory : IStatusEffectModifierFactory
     {
-        public Modifier GetStatusEffectModifier(int statusEffectType) => new(
-            statType: 0,
-            op: ModOp.None,
+        public Modifier GetStatusEffectModifier(string statusEffectTypeId) => new(
+            statType: string.Empty,
+            op: string.Empty,
             value: 1,
-            conditions: null,
+            condition: null,
             isHidden: false);
     }
 }

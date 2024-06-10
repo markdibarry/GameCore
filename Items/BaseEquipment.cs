@@ -38,16 +38,20 @@ public class BaseEquipment
     {
         ItemStack? itemStack = _inventory.GetItemStacks(item)
             .FirstOrDefault(x => x.CanReserve());
+
         if (itemStack == null)
             return false;
+
         return TrySetItem(actor, slot, itemStack);
     }
 
     public bool TrySetItem(BaseActor actor, EquipmentSlot slot, ItemStack newItemStack)
     {
         BaseItem? oldItem = slot.Item;
+
         if (!slot.TrySetItem(actor, newItemStack))
             return false;
+
         EquipmentSetCallback?.Invoke(slot, oldItem, newItemStack.Item);
         return true;
     }
@@ -56,6 +60,7 @@ public class BaseEquipment
     {
         if (slot.ItemStack == null)
             return;
+
         BaseItem? oldItem = slot.Item;
         slot.RemoveItem(actor);
         EquipmentSetCallback?.Invoke(slot, oldItem, null);

@@ -2,5 +2,5 @@
 
 public interface IStatusEffectModifierFactory
 {
-    Modifier GetStatusEffectModifier(int statusEffectType);
+    Modifier GetStatusEffectModifier(string statusEffectTypeId);
 }

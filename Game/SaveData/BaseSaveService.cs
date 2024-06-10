@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Godot;
 
@@ -17,7 +18,8 @@ public class BaseSaveService<T> where T : IGameSave
         nameof(GodotObject.NativeInstance),
         nameof(Resource.ResourceName),
         nameof(Resource.ResourcePath),
-        nameof(Resource.ResourceLocalToScene)
+        nameof(Resource.ResourceLocalToScene),
+        nameof(Resource.ResourceSceneUniqueId)
     ];
     private static readonly JsonSerializerOptions s_options = new()
     {
@@ -25,7 +27,8 @@ public class BaseSaveService<T> where T : IGameSave
         TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {
             Modifiers = { IgnoreBaseClass }
-        }
+        },
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
     };
 
     private static void IgnoreBaseClass(JsonTypeInfo typeInfo)
@@ -52,7 +55,6 @@ public class BaseSaveService<T> where T : IGameSave
                 return (fileName, GetGameSave(fileName));
             })
             .OfType<(string, T)>()
-            .OrderBy(x => x.Item2.LastModifiedUtc)
             .ToList();
     }
 

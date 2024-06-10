@@ -4,5 +4,5 @@ namespace GameCore.Statistics;
 
 public interface IConditionTypeDB
 {
-    Type? GetConditionType(int conditionType);
+    Type? GetConditionType(string conditionType);
 }

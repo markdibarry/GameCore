@@ -9,10 +9,13 @@ public class StatusEffectData
     public string AbbrName { get; init; } = string.Empty;
     public string PastTenseName { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
-    public int EffectType { get; init; }
-    public Action<StatsBase, IStatusEffect>? EnterEffect { get; init; }
-    public Action<StatsBase, IStatusEffect>? ExitEffect { get; init; }
+    public string EffectType { get; init; } = string.Empty;
+    public Condition? DurationCondition { get; init; }
+    public Action<StatsBase, StatusEffect>? EnterEffect { get; init; }
+    public Action<StatsBase, StatusEffect>? ExitEffect { get; init; }
     public IReadOnlyCollection<Modifier> EffectModifiers { get; init; } = [];
-    public Condition? TickCondition { get; init; }
-    public Action<StatsBase, IStatusEffect>? TickEffect { get; init; }
+    public Condition? IntervalCondition { get; init; }
+    public Action<StatsBase, StatusEffect>? IntervalEffect { get; init; }
+    public bool Refreshable { get; init; }
+    public bool Stackable { get; init; }
 }

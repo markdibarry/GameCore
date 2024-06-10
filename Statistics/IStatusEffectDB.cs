@@ -1,6 +1,8 @@
-﻿namespace GameCore.Statistics;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace GameCore.Statistics;
 
 public interface IStatusEffectDB
 {
-    StatusEffectData? GetEffectData(int type);
+    bool TryGetEffectData(string typeId, [MaybeNullWhen(false)] out StatusEffectData data);
 }

@@ -22,6 +22,7 @@ public abstract class BaseItem : IEquatable<BaseItem>
     public ItemCategory ItemCategory { get; }
     public int MaxStack { get; init; } = 1;
     public ICollection<Modifier> Modifiers { get; set; } = Array.Empty<Modifier>();
+    public ICollection<string> StatusEffects { get; set; } = Array.Empty<string>();
     public int Price { get; init; }
     public ItemUseData UseData { get; init; } = new();
 
@@ -29,6 +30,7 @@ public abstract class BaseItem : IEquatable<BaseItem>
     {
         if (other == null)
             return false;
+
         return other.Id == Id;
     }
 }

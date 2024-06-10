@@ -30,9 +30,12 @@ public class EquipmentSlot
     {
         if (ItemStack == null)
             return;
+
         ItemStack.RemoveReservation(this);
+
         foreach (Modifier mod in ItemStack.Item.Modifiers)
             actor.Stats.RemoveMod(mod, this);
+
         ItemStack = null;
     }
 
@@ -40,6 +43,7 @@ public class EquipmentSlot
     {
         if (!newItemStack.CanReserve())
             return false;
+
         if (!IsCompatible(newItemStack.Item))
             return false;
 
@@ -47,8 +51,10 @@ public class EquipmentSlot
 
         newItemStack.AddReservation(actor, this);
         ItemStack = newItemStack;
+
         foreach (Modifier mod in ItemStack.Item.Modifiers)
             actor.Stats.AddMod(mod, this);
+
         return true;
     }
 }

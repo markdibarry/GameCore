@@ -1,4 +1,6 @@
-﻿namespace GameCore.Statistics;
+﻿using System;
+
+namespace GameCore.Statistics;
 
 public static class MathI
 {
@@ -17,22 +19,20 @@ public static class MathI
         };
     }
 
-    public static int Compute(this ModOp op, int a, int b)
+    public static float Compute(string op, float a, float b)
     {
         return op switch
         {
-            ModOp.Add => a + b,
-            ModOp.Subtract => a - b,
-            ModOp.Multiply => a * b,
-            ModOp.Divide => b == 0 ? 0 : a / b,
-            ModOp.Percent => (int)(a * (b * 0.01)),
+            ModOp.Add or
+            ModOp.BaseAdd or
+            ModOp.PercentAdd => a + b,
+            ModOp.PercentMult => a * (1 + b),
             ModOp.Negate => -a,
-            ModOp.Max => System.Math.Max(a, b),
-            ModOp.Min => System.Math.Min(a, b),
+            ModOp.Max => Math.Max(a, b),
+            ModOp.Min => Math.Min(a, b),
             ModOp.Replace => b,
             ModOp.Zero => 0,
             ModOp.One => 1,
-            ModOp.None or
             _ => a
         };
     }
